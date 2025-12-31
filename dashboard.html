@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duty Hours - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; }
+        .logout-btn { background: #ff6b6b; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+        .tab-btn { padding: 12px 20px; background: none; border: none; cursor: pointer; font-size: 16px; font-weight: bold; color: #999; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section h2 { margin-bottom: 15px; color: #333; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+        
+        .duty-card { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea; }
+        .duty-card h3 { color: #333; margin-bottom: 5px; }
+        .duty-card p { color: #666; font-size: 13px; margin-bottom: 3px; }
+        .duty-card .actions { margin-top: 10px; display: flex; gap: 10px; }
+        .duty-card button { padding: 5px 10px; font-size: 12px; }
+        
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .user-table th { background: #f5f5f5; padding: 10px; text-align: left; font-weight: bold; border-bottom: 2px solid #ddd; }
+        .user-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .user-table tr:hover { background: #f9f9f9; }
+        
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .badge-admin { background: #ffe0e0; color: #c33; }
+        .badge-user { background: #e0f2f1; color: #00695c; }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .badge-approved { background: #d4edda; color: #155724; }
+        
+        .profile-pic { width: 80px; height: 80px; border-radius: 50%; background: #ddd; object-fit: cover; border: 3px solid #667eea; }
+        .profile-section { text-align: center; }
+        
+        .chat-container { display: flex; gap: 15px; height: 500px; }
+        .chat-list { flex: 0 0 200px; background: #f9f9f9; border-radius: 8px; overflow-y: auto; padding: 10px; }
+        .chat-window { flex: 1; background: #f9f9f9; border-radius: 8px; display: flex; flex-direction: column; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; }
+        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
+        .message.own { background: #667eea; color: white; text-align: right; }
+        .message.other { background: white; color: #333; border: 1px solid #ddd; }
+        .chat-input { padding: 15px; display: flex; gap: 10px; border-top: 1px solid #ddd; }
+        .chat-input input { flex: 1; }
+        .chat-user { padding: 8px; cursor: pointer; border-radius: 6px; margin-bottom: 5px; }
+        .chat-user.active { background: #667eea; color: white; }
+        .chat-user:hover { background: #e8e9fa; }
+        
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+        .stat-card h3 { color: #667eea; font-size: 32px; margin-bottom: 5px; }
+        .stat-card p { color: #666; font-size: 14px; }
+        
+        .error { color: red; padding: 10px; background: #fee; border-radius: 5px; margin-bottom: 10px; }
+        .success { color: green; padding: 10px; background: #efe; border-radius: 5px; margin-bottom: 10px; }
+        
+        @media (max-width: 768px) {
+            .chat-container { flex-direction: column; height: auto; }
+            .chat-list { flex: 0 0 auto; max-height: 100px; }
+            .tabs { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⏰ Duty Hours System</h1>
+        <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('home')">🏠 Home</button>
+            <button class="tab-btn" onclick="switchTab('profile')">👤 Profile</button>
+            <button class="tab-btn" onclick="switchTab('chat')">💬 Chat</button>
+            <button class="tab-btn" id="adminBtn" onclick="switchTab('admin')" style="display: none;">⚙️ Admin</button>
+        </div>
+
+        <!-- Home Tab -->
+        <div id="home" class="tab-content active">
+            <div class="stats" id="statsContainer"></div>
+
+            <div class="section">
+                <h2>📋 Available Duties</h2>
+                <div id="dutiesList"></div>
+            </div>
+
+            <div class="section">
+                <h2>✅ My Signups</h2>
+                <div id="mySignupsList"></div>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content">
+            <div class="section profile-section">
+                <h2>👤 My Profile</h2>
+                <img id="profilePic" class="profile-pic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='35' r='15' fill='%23999'/%3E%3Cpath d='M 30 60 Q 50 50 70 60' fill='%23999'/%3E%3C/svg%3E">
+                <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById('profilePicInput').click()" style="margin-top: 15px;">📷 Upload Picture</button>
+                
+                <div style="margin-top: 30px; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    <p><strong>Name:</strong> <span id="profileName"></span></p>
+                    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                    <p><strong>Role:</strong> <span id="profileRole" class="badge badge-user"></span></p>
+                    <p><strong>Status:</strong> <span id="profileStatus"></span></p>
+                    <p><strong>Total Hours:</strong> <span id="profileHours">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="chat" class="tab-content">
+            <div class="section">
+                <h2>💬 Messages</h2>
+                <div class="chat-container">
+                    <div class="chat-list">
+                        <input type="text" id="chatSearch" placeholder="Search users..." style="width: 100%; margin-bottom: 10px;">
+                        <div id="chatUsersList"></div>
+                    </div>
+                    <div class="chat-window">
+                        <div class="chat-messages" id="chatMessages">
+                            <p style="color: #999; text-align: center;">Select a user to start chatting</p>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+                            <button onclick="sendMessage()" disabled id="sendBtn">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📣 Announcements</h2>
+                <div id="announcementsList"></div>
+            </div>
+        </div>
+
+        <!-- Admin Tab -->
+        <div id="admin" class="tab-content">
+            <div class="section">
+                <h2>⏳ Pending User Approvals</h2>
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTable"></tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>👥 Approved Users</h2>
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Hours</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>➕ Create New Duty</h2>
+                <form id="createDutyForm">
+                    <div class="form-group">
+                        <label>Duty Name</label>
+                        <input type="text" id="dutyName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="dutyDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Time</label>
+                        <input type="time" id="dutyStartTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Time</label>
+                        <input type="time" id="dutyEndTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="dutyType" required>
+                            <option>Cleaning</option>
+                            <option>Event</option>
+                            <option>Maintenance</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <button type="submit">Create Duty</button>
+                </form>
+            </div>
+
+            <div class="section">
+                <h2>🚀 Active Duties</h2>
+                <div id="activeDutiesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let selectedChatUser = null;
+
+        function init() {
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                window.location.href = '/';
+                return;
+            }
+
+            // Show admin tab if user is admin
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminBtn').style.display = 'block';
+            }
+
+            loadProfile();
+            loadDuties();
+            loadMySignups();
+            loadStats();
+            loadUsers();
+            loadChatUsers();
+            loadAnnouncements();
+            loadActiveDuties();
+
+            // Event listeners
+            document.getElementById('profilePicInput').addEventListener('change', uploadProfilePic);
+            document.getElementById('createDutyForm').addEventListener('submit', createDuty);
+            document.getElementById('chatSearch').addEventListener('input', searchChatUsers);
+            document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function loadProfile() {
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profileRole').textContent = currentUser.role.toUpperCase();
+            document.getElementById('profileRole').className = 'badge ' + (currentUser.role === 'admin' ? 'badge-admin' : 'badge-user');
+            document.getElementById('profileStatus').textContent = currentUser.status === 'approved' ? '✅ Active' : '⏳ Pending';
+            document.getElementById('profileHours').textContent = currentUser.hours || 0;
+
+            if (currentUser.profilePic) {
+                document.getElementById('profilePic').src = currentUser.profilePic;
+            }
+        }
+
+        function uploadProfilePic(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    currentUser.profilePic = event.target.result;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    document.getElementById('profilePic').src = currentUser.profilePic;
+                    updateUserInList();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadStats() {
+            const duties = JSON.parse(localStorage.getItem('duties') || '[]');
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const signups = JSON.parse(localStorage.getItem('signups') || '[]');
+
+            const mySignups = signups.filter(s => s.userId === currentUser.id);
+            const completedDuties = mySignups.filter(s => s.status === 'completed').length;
+            const totalHours = mySignups.filter(s => s.status === 'completed').reduce((sum, s) => sum + (s.hours || 0), 0);
+
+            const statsHTML = `
+                <div class="stat-card">
+                    <h3>${duties.length}</h3>
+                    <p>Total Duties</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${completedDuties}</h3>
+                    <p>Completed Duties</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${totalHours}</h3>
+                    <p>Total Hours</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${users.filter(u => u.status === 'approved').length}</h3>
+                    <p>Active Members</p>
+                </div>
+            `;
+            document.getElementById('statsContainer').innerHTML = statsHTML;
+        }
+
+        function loadDuties() {
+            const duties = JSON.parse(localStorage.getItem('duties') || '[]');
+            const openDuties = duties.filter(d => d.status === 'open');
+
+            if (openDuties.length === 0) {
+                document.getElementById('dutiesList').innerHTML = '<p style="color: #999;">No available duties</p>';
+                return;
+            }
+
+            const html = openDuties.map(duty => `
+                <div class="duty-card">
+                    <h3>${duty.name}</h3>
+                    <p>📅 ${duty.date} | ⏰ ${duty.startTime} - ${duty.endTime}</p>
+                    <p>Type: ${duty.type}</p>
+                    <div class="actions">
+                        <button onclick="signUpForDuty('${duty.id}')">Sign Up</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('dutiesList').innerHTML = html;
+        }
+
+        function signUpForDuty(dutyId) {
+            const signups = JSON.parse(localStorage.getItem('signups') || '[]');
+            
+            if (signups.find(s => s.dutyId === dutyId && s.userId === currentUser.id)) {
+                alert('You already signed up for this duty');
+                return;
+            }
+
+            const signup = {
+                id: 'signup_' + Date.now(),
+                dutyId: dutyId,
+                userId: currentUser.id,
+                status: 'pending'
+            };
+
+            signups.push(signup);
+            localStorage.setItem('signups', JSON.stringify(signups));
+            alert('✓ Signed up for duty! Waiting for admin approval.');
+            loadMySignups();
+        }
+
+        function loadMySignups() {
+            const signups = JSON.parse(localStorage.getItem('signups') || '[]');
+            const duties = JSON.parse(localStorage.getItem('duties') || '[]');
+            const mySignups = signups.filter(s => s.userId === currentUser.id);
+
+            if (mySignups.length === 0) {
+                document.getElementById('mySignupsList').innerHTML = '<p style="color: #999;">You haven\'t signed up for any duties</p>';
+                return;
+            }
+
+            const html = mySignups.map(signup => {
+                const duty = duties.find(d => d.id === signup.dutyId);
+                return `
+                    <div class="duty-card">
+                        <h3>${duty.name}</h3>
+                        <p>📅 ${duty.date} | ⏰ ${duty.startTime} - ${duty.endTime}</p>
+                        <p>Status: <span class="badge badge-${signup.status}">${signup.status.toUpperCase()}</span></p>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('mySignupsList').innerHTML = html;
+        }
+
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const approvedUsers = users.filter(u => u.status === 'approved');
+
+            const html = approvedUsers.map(user => `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="badge ${user.role === 'admin' ? 'badge-admin' : 'badge-user'}">${user.role.toUpperCase()}</span></td>
+                    <td>${user.hours || 0}</td>
+                    <td>
+                        ${user.role !== 'admin' ? `<button onclick="makeAdmin('${user.id}')">Make Admin</button>` : 'Admin'}
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('userTableBody').innerHTML = html || '<tr><td colspan="5" style="text-align: center; color: #999;">No approved users</td></tr>';
+
+            // Load pending users
+            const pendingUsers = users.filter(u => u.status === 'pending');
+            const pendingHTML = pendingUsers.map(user => `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <button onclick="approveUser('${user.id}')">Approve</button>
+                        <button onclick="rejectUser('${user.id}')" style="background: #ff6b6b;">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('pendingTable').innerHTML = pendingHTML || '<tr><td colspan="3" style="text-align: center; color: #999;">No pending users</td></tr>';
+        }
+
+        function approveUser(userId) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.status = 'approved';
+                localStorage.setItem('users', JSON.stringify(users));
+                loadUsers();
+                alert('✓ User approved!');
+            }
+        }
+
+        function rejectUser(userId) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const idx = users.findIndex(u => u.id === userId);
+            if (idx !== -1) {
+                users.splice(idx, 1);
+                localStorage.setItem('users', JSON.stringify(users));
+                loadUsers();
+                alert('✓ User rejected!');
+            }
+        }
+
+        function makeAdmin(userId) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.role = 'admin';
+                localStorage.setItem('users', JSON.stringify(users));
+                loadUsers();
+                alert('✓ User is now an admin!');
+            }
+        }
+
+        function createDuty(e) {
+            e.preventDefault();
+            const duty = {
+                id: 'duty_' + Date.now(),
+                name: document.getElementById('dutyName').value,
+                date: document.getElementById('dutyDate').value,
+                startTime: document.getElementById('dutyStartTime').value,
+                endTime: document.getElementById('dutyEndTime').value,
+                type: document.getElementById('dutyType').value,
+                status: 'open',
+                createdBy: currentUser.id
+            };
+
+            const duties = JSON.parse(localStorage.getItem('duties') || '[]');
+            duties.push(duty);
+            localStorage.setItem('duties', JSON.stringify(duties));
+
+            document.getElementById('createDutyForm').reset();
+            alert('✓ Duty created!');
+            loadDuties();
+            loadActiveDuties();
+            loadStats();
+        }
+
+        function loadChatUsers() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const approvedUsers = users.filter(u => u.status === 'approved' && u.id !== currentUser.id);
+
+            if (approvedUsers.length === 0) {
+                document.getElementById('chatUsersList').innerHTML = '<p style="color: #999; font-size: 12px;">No users available</p>';
+                return;
+            }
+
+            const html = approvedUsers.map(user => `
+                <div class="chat-user" onclick="selectChatUser('${user.id}', '${user.name}')">
+                    <strong>${user.name}</strong>
+                    <p style="font-size: 11px; color: #999;">${user.email}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('chatUsersList').innerHTML = html;
+        }
+
+        function selectChatUser(userId, userName) {
+            selectedChatUser = userId;
+            document.querySelectorAll('.chat-user').forEach(u => u.classList.remove('active'));
+            event.target.closest('.chat-user').classList.add('active');
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            loadChatMessages();
+        }
+
+        function loadChatMessages() {
+            const messages = JSON.parse(localStorage.getItem('messages') || '[]');
+            const chatMessages = messages.filter(m => 
+                (m.fromId === currentUser.id && m.toId === selectedChatUser) ||
+                (m.fromId === selectedChatUser && m.toId === currentUser.id)
+            );
+
+            const html = chatMessages.map(msg => `
+                <div class="message ${msg.fromId === currentUser.id ? 'own' : 'other'}">
+                    ${msg.text}
+                </div>
+            `).join('');
+
+            document.getElementById('chatMessages').innerHTML = html || '<p style="color: #999;">No messages yet</p>';
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = document.getElementById('messageInput').value;
+            if (!text || !selectedChatUser) return;
+
+            const message = {
+                id: 'msg_' + Date.now(),
+                fromId: currentUser.id,
+                toId: selectedChatUser,
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+
+            const messages = JSON.parse(localStorage.getItem('messages') || '[]');
+            messages.push(message);
+            localStorage.setItem('messages', JSON.stringify(messages));
+
+            document.getElementById('messageInput').value = '';
+            loadChatMessages();
+        }
+
+        function searchChatUsers() {
+            const query = document.getElementById('chatSearch').value.toLowerCase();
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const approvedUsers = users.filter(u => u.status === 'approved' && u.id !== currentUser.id);
+            const filtered = approvedUsers.filter(u => u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query));
+
+            const html = filtered.map(user => `
+                <div class="chat-user" onclick="selectChatUser('${user.id}', '${user.name}')">
+                    <strong>${user.name}</strong>
+                    <p style="font-size: 11px; color: #999;">${user.email}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('chatUsersList').innerHTML = html || '<p style="color: #999; font-size: 12px;">No users found</p>';
+        }
+
+        function loadAnnouncements() {
+            const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+            
+            if (announcements.length === 0) {
+                document.getElementById('announcementsList').innerHTML = '<p style="color: #999;">No announcements yet</p>';
+                return;
+            }
+
+            const html = announcements.map(ann => `
+                <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea;">
+                    <h4>${ann.title}</h4>
+                    <p>${ann.message}</p>
+                    <p style="font-size: 11px; color: #999;">Posted by ${ann.postedBy}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('announcementsList').innerHTML = html;
+        }
+
+        function loadActiveDuties() {
+            const duties = JSON.parse(localStorage.getItem('duties') || '[]');
+            const activeDuties = duties.filter(d => d.status === 'in_progress' || d.status === 'open');
+
+            if (activeDuties.length === 0) {
+                document.getElementById('activeDutiesList').innerHTML = '<p style="color: #999;">No active duties</p>';
+                return;
+            }
+
+            const html = activeDuties.map(duty => `
+                <div class="duty-card">
+                    <h3>${duty.name}</h3>
+                    <p>📅 ${duty.date} | ⏰ ${duty.startTime} - ${duty.endTime}</p>
+                    <p>Status: ${duty.status}</p>
+                    <div class="actions">
+                        ${duty.status === 'open' ? `<button onclick="startDuty('${duty.id}')">Start Duty</button>` : ''}
+                        ${duty.status === 'in_progress' ? `<button onclick="completeDuty('${duty.id}')">Mark Complete</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('activeDutiesList').innerHTML = html;
+        }
+
+        function startDuty(dutyId) {
+            const duties = JSON.parse(localStorage.getItem('duties') || '[]');
+            const duty = duties.find(d => d.id === dutyId);
+            if (duty) {
+                duty.status = 'in_progress';
+                localStorage.setItem('duties', JSON.stringify(duties));
+                loadActiveDuties();
+                alert('✓ Duty started!');
+            }
+        }
+
+        function completeDuty(dutyId) {
+            const duties = JSON.parse(localStorage.getItem('duties') || '[]');
+            const duty = duties.find(d => d.id === dutyId);
+            if (duty) {
+                duty.status = 'completed';
+                localStorage.setItem('duties', JSON.stringify(duties));
+                
+                // Update user hours
+                const signups = JSON.parse(localStorage.getItem('signups') || '[]');
+                const dutySignups = signups.filter(s => s.dutyId === dutyId && s.status === 'verified');
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                
+                const startTime = new Date(`2000-01-01 ${duty.startTime}`);
+                const endTime = new Date(`2000-01-01 ${duty.endTime}`);
+                const hours = (endTime - startTime) / (1000 * 60 * 60);
+
+                dutySignups.forEach(signup => {
+                    const user = users.find(u => u.id === signup.userId);
+                    if (user) {
+                        user.hours = (user.hours || 0) + hours;
+                        signup.status = 'completed';
+                        signup.hours = hours;
+                    }
+                });
+
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('signups', JSON.stringify(signups));
+                loadActiveDuties();
+                loadStats();
+                alert('✓ Duty completed! Hours recorded for all verified members.');
+            }
+        }
+
+        function updateUserInList() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if (idx !== -1) {
+                users[idx] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '/';
+        }
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>
