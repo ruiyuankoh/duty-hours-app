@@ -23,7 +23,7 @@
 
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 1200px;
         }
 
         .card {
@@ -288,6 +288,16 @@
             color: #c2185b;
         }
 
+        .demo-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
         @media (max-width: 600px) {
             .card {
                 padding: 25px;
@@ -309,8 +319,140 @@
     </style>
 </head>
 <body>
-    <!-- Login/Signup Form -->
-    <div class="container" id="authContainer">
+    <!-- Dashboard (Demo Mode - Shown by Default) -->
+    <div class="container" id="dashboardContainer" class="dashboard active">
+        <div class="header">
+            <div>
+                <h2>⏱️ Duty Hours System</h2>
+                <p>Admin User</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
+        </div>
+
+        <div class="demo-notice">
+            📌 <strong>Demo Mode:</strong> This is a preview of the Duty Hours System. Click "Sign Out" to access the login page with your Supabase credentials.
+        </div>
+
+        <div class="stats" id="statsContainer">
+            <div class="stat-card">
+                <h3>Total Hours</h3>
+                <div class="value">24</div>
+            </div>
+            <div class="stat-card">
+                <h3>Completed Duties</h3>
+                <div class="value">4</div>
+            </div>
+            <div class="stat-card">
+                <h3>Verified Signups</h3>
+                <div class="value">3</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pending Verifications</h3>
+                <div class="value">2</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📝 Create New Duty (Admin Only)</h3>
+            <form onsubmit="return false;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Duty Name</label>
+                        <input type="text" placeholder="e.g., Classroom Cleaning">
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select>
+                            <option>General</option>
+                            <option>Maintenance</option>
+                            <option>Event</option>
+                            <option>Training</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" value="2025-12-31">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Start</label>
+                        <input type="time">
+                    </div>
+                    <div class="form-group">
+                        <label>Time End</label>
+                        <input type="time">
+                    </div>
+                </div>
+                <button type="button" style="margin-top: 15px;">Create Duty</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h3>📋 Available Duties</h3>
+            <ul class="duty-list">
+                <li class="duty-item">
+                    <h4>Classroom Cleaning <span class="status-badge status-open">Open</span></h4>
+                    <p>📅 January 15, 2026 • ⏰ 09:00 - 11:00</p>
+                    <p>Type: Maintenance</p>
+                    <button>Sign Up</button>
+                </li>
+                <li class="duty-item">
+                    <h4>Library Organization <span class="status-badge status-open">Open</span></h4>
+                    <p>📅 January 16, 2026 • ⏰ 14:00 - 16:00</p>
+                    <p>Type: General</p>
+                    <button>Sign Up</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>✅ My Signups</h3>
+            <ul class="duty-list">
+                <li class="duty-item">
+                    <h4>Event Setup <span class="status-badge status-verified">Verified</span></h4>
+                    <p>📅 January 10, 2026 • ⏰ 10:00 - 13:00</p>
+                    <p>Type: Event</p>
+                </li>
+                <li class="duty-item">
+                    <h4>Grounds Maintenance <span class="status-badge status-completed">Completed</span></h4>
+                    <p>📅 January 5, 2026 • ⏰ 08:00 - 10:00</p>
+                    <p>Type: Maintenance • Hours: 2</p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>🔍 Pending Verifications (Admin Only)</h3>
+            <ul class="duty-list">
+                <li class="duty-item">
+                    <h4>John Doe - Classroom Cleaning</h4>
+                    <p>📧 john.doe@example.com</p>
+                    <p>Signed up on: January 14, 2026</p>
+                    <button>✓ Verify</button>
+                </li>
+                <li class="duty-item">
+                    <h4>Jane Smith - Library Organization</h4>
+                    <p>📧 jane.smith@example.com</p>
+                    <p>Signed up on: January 14, 2026</p>
+                    <button>✓ Verify</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>🚀 Active Duties (Admin Only)</h3>
+            <ul class="duty-list">
+                <li class="duty-item">
+                    <h4>Event Setup <span class="status-badge status-in-progress">In Progress</span></h4>
+                    <p>📅 January 10, 2026 • ⏰ 10:00 - 13:00</p>
+                    <p>Participants: 3</p>
+                    <button>✓ Mark Completed</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Login Form (Hidden by Default) -->
+    <div class="container" id="authContainer" class="hidden">
         <div class="card">
             <div class="logo">
                 <h1>⏱️ Duty Hours</h1>
@@ -319,8 +461,7 @@
 
             <div class="error" id="errorMessage"></div>
 
-            <!-- Sign In Form -->
-            <form id="signInForm">
+            <form id="signInForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="signInEmail">Email</label>
                     <input type="email" id="signInEmail" placeholder="your@email.com" required>
@@ -332,57 +473,28 @@
                 <button type="submit">Sign In</button>
             </form>
 
-            <!-- Sign Up Form -->
-            <form id="signUpForm" class="hidden">
-                <div class="form-group">
-                    <label for="signUpName">Full Name</label>
-                    <input type="text" id="signUpName" placeholder="Your name" required>
-                </div>
-                <div class="form-group">
-                    <label for="signUpEmail">Email</label>
-                    <input type="email" id="signUpEmail" placeholder="your@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="signUpPassword">Password</label>
-                    <input type="password" id="signUpPassword" placeholder="••••••••" required>
-                </div>
-                <button type="submit">Create Account</button>
-            </form>
-
             <div class="toggle-link">
-                <span id="toggleText">Don't have an account? <a onclick="toggleForms()">Sign Up</a></span>
+                <p>To sign in with your Supabase account, enter your credentials above.</p>
+                <p style="margin-top: 10px; font-size: 12px; color: #999;">Admin Email: ruiyuan.koh@gmail.com</p>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard -->
-    <div class="container" id="dashboardContainer">
-        <div class="header">
-            <div>
-                <h2 id="dashboardTitle">My Duties</h2>
-                <p id="userEmail"></p>
-            </div>
-            <button class="logout-btn" onclick="logout()">Sign Out</button>
-        </div>
+    <script>
+        function logout() {
+            document.getElementById('dashboardContainer').classList.remove('active');
+            document.getElementById('authContainer').classList.remove('hidden');
+        }
 
-        <div class="stats" id="statsContainer"></div>
+        function handleLogin(event) {
+            event.preventDefault();
+            alert('Login functionality requires Supabase integration. For now, you can view the demo mode.');
+        }
 
-        <div class="section">
-            <h3>Available Duties</h3>
-            <ul class="duty-list" id="dutiesList">
-                <li style="text-align: center; color: #999; padding: 20px;">Loading duties...</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h3>My Signups</h3>
-            <ul class="duty-list" id="signupsList">
-                <li style="text-align: center; color: #999; padding: 20px;">Loading signups...</li>
-            </ul>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js"></script>
+        // Initialize - show dashboard by default
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('dashboardContainer').classList.add('active');
+        });
+    </script>
 </body>
 </html>
