@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Duty Hours">
     <meta name="description" content="Duty Hours System - Manage duties and track your hours">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icon-192.png">
@@ -75,7 +78,7 @@
             font-size: 14px;
         }
 
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
@@ -85,7 +88,7 @@
             transition: border-color 0.3s;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -321,6 +324,34 @@
             color: #c2185b;
         }
 
+        /* Profile Picture */
+        .profile-pic-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: inline-block;
+            overflow: hidden;
+            object-fit: cover;
+            border: 3px solid #667eea;
+        }
+
+        .pic-upload-btn {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        #profilePicInput {
+            display: none;
+        }
+
         /* User Management Table */
         .user-table {
             width: 100%;
@@ -372,6 +403,71 @@
             font-size: 11px;
             width: auto;
             margin-right: 5px;
+        }
+
+        /* Chat Styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-list {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+
+        .chat-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 4px solid #667eea;
+        }
+
+        .chat-item:hover {
+            background: #e8e9fa;
+        }
+
+        .chat-item h4 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .chat-item p {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .chat-messages {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .message.own {
+            background: #667eea;
+            color: white;
+            text-align: right;
+        }
+
+        .message.other {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
         }
 
         .demo-notice {
@@ -550,10 +646,15 @@
             <div id="profileTab" class="tab-pane">
                 <div class="section">
                     <h3>👤 My Profile</h3>
+                    <div class="profile-pic-container">
+                        <img id="profilePicImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='40' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E" class="profile-pic" alt="Profile">
+                        <input type="file" id="profilePicInput" accept="image/*" onchange="uploadProfilePic()">
+                        <button class="pic-upload-btn" onclick="document.getElementById('profilePicInput').click()">📷 Upload Picture</button>
+                    </div>
                     <div style="padding: 20px 0;">
-                        <p style="margin-bottom: 15px;"><strong>Name:</strong> Demo User</p>
-                        <p style="margin-bottom: 15px;"><strong>Email:</strong> user@example.com</p>
-                        <p style="margin-bottom: 15px;"><strong>Role:</strong> <span class="role-badge role-user">User</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Name:</strong> <span id="profileName">Demo User</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Email:</strong> <span id="profileEmail">user@example.com</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Role:</strong> <span class="role-badge role-user" id="profileRole">User</span></p>
                         <p style="margin-bottom: 15px;"><strong>Total Hours:</strong> 24 hours</p>
                         <p style="margin-bottom: 15px;"><strong>Completed Duties:</strong> 4</p>
                         <p style="margin-bottom: 15px;"><strong>Member Since:</strong> January 1, 2026</p>
@@ -582,8 +683,37 @@
             <!-- Chat Tab -->
             <div id="chatTab" class="tab-pane">
                 <div class="section">
-                    <h3>💬 Messages</h3>
-                    <p style="color: #999; padding: 20px 0; text-align: center;">No messages yet</p>
+                    <h3>💬 Group Chats</h3>
+                    <ul class="chat-list">
+                        <li class="chat-item" onclick="openChat('general')">
+                            <h4>📢 General Discussion</h4>
+                            <p>General chat for all members</p>
+                        </li>
+                        <li class="chat-item" onclick="openChat('announcements')">
+                            <h4>📣 Announcements</h4>
+                            <p>Important updates from admins</p>
+                        </li>
+                        <li class="chat-item" onclick="openChat('pending')">
+                            <h4>⏳ Pending Approval</h4>
+                            <p>Awaiting admin approval (2 requests)</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="section" id="chatWindow" style="display: none;">
+                    <h3 id="chatTitle">Chat</h3>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message other">
+                            <strong>Admin:</strong> Welcome to the group chat!
+                        </div>
+                        <div class="message own">
+                            Thanks! Happy to be here.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeypress(event)">
+                    </div>
+                    <button onclick="sendMessage()">Send Message</button>
                 </div>
             </div>
 
@@ -591,7 +721,7 @@
             <div id="adminTab" class="tab-pane">
                 <div class="section">
                     <h3>👥 User Management</h3>
-                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Total Users: <strong>5</strong></p>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Total Users: <strong id="totalUsers">5</strong></p>
                     <table class="user-table">
                         <thead>
                             <tr>
@@ -602,7 +732,7 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="userTableBody">
                             <tr>
                                 <td>Admin User</td>
                                 <td>admin@example.com</td>
@@ -692,13 +822,27 @@
     <script>
         // User data storage
         let currentUser = null;
-        let users = [
+        let allUsers = [
             { id: 1, name: 'Admin User', email: 'admin@example.com', role: 'admin', hours: 0 },
             { id: 2, name: 'John Doe', email: 'john@example.com', role: 'user', hours: 8 },
             { id: 3, name: 'Jane Smith', email: 'jane@example.com', role: 'user', hours: 12 },
             { id: 4, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', hours: 5 },
             { id: 5, name: 'Alice Brown', email: 'alice@example.com', role: 'user', hours: 16 }
         ];
+
+        // Load user from localStorage on page load
+        function loadUserFromStorage() {
+            const saved = localStorage.getItem('currentUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                showDashboard();
+            }
+        }
+
+        // Save user to localStorage
+        function saveUserToStorage() {
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
 
         function toggleForms() {
             const signInForm = document.getElementById('signInForm');
@@ -717,6 +861,7 @@
 
         function showDemo() {
             currentUser = { name: 'Demo User', email: 'user@example.com', role: 'user' };
+            saveUserToStorage();
             showDashboard();
         }
 
@@ -724,10 +869,24 @@
             document.getElementById('authContainer').classList.add('hidden');
             document.getElementById('dashboardContainer').classList.remove('hidden');
 
+            // Update profile info
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            
+            const roleSpan = document.getElementById('profileRole');
+            if (currentUser.role === 'admin') {
+                roleSpan.textContent = 'Admin';
+                roleSpan.className = 'role-badge role-admin';
+            } else {
+                roleSpan.textContent = 'User';
+                roleSpan.className = 'role-badge role-user';
+            }
+
             // Show admin tab only for admins
             const adminTab = document.querySelector('.admin-tab');
             if (currentUser.role === 'admin') {
                 adminTab.classList.remove('hidden');
+                document.getElementById('totalUsers').textContent = allUsers.length;
             } else {
                 adminTab.classList.add('hidden');
             }
@@ -735,6 +894,7 @@
 
         function logout() {
             currentUser = null;
+            localStorage.removeItem('currentUser');
             document.getElementById('dashboardContainer').classList.add('hidden');
             document.getElementById('authContainer').classList.remove('hidden');
             switchTab('home');
@@ -770,6 +930,7 @@
                 currentUser = { name: 'User', email: email, role: 'user' };
             }
             
+            saveUserToStorage();
             showDashboard();
         });
 
@@ -782,9 +943,66 @@
             // New users are always regular users, not admins
             currentUser = { name: name, email: email, role: 'user' };
             
+            // Add to all users list
+            allUsers.push({
+                id: allUsers.length + 1,
+                name: name,
+                email: email,
+                role: 'user',
+                hours: 0
+            });
+            
+            saveUserToStorage();
             alert('Account created! You can now use the app.');
             showDashboard();
         });
+
+        // Profile picture upload
+        function uploadProfilePic() {
+            const input = document.getElementById('profilePicInput');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profilePicImg').src = e.target.result;
+                    localStorage.setItem('profilePic', e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Load profile picture from storage
+        function loadProfilePic() {
+            const saved = localStorage.getItem('profilePic');
+            if (saved) {
+                document.getElementById('profilePicImg').src = saved;
+            }
+        }
+
+        // Chat functions
+        function openChat(chatName) {
+            document.getElementById('chatWindow').style.display = 'block';
+            document.getElementById('chatTitle').textContent = chatName.charAt(0).toUpperCase() + chatName.slice(1);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (message) {
+                const messagesDiv = document.getElementById('chatMessages');
+                const msgElement = document.createElement('div');
+                msgElement.className = 'message own';
+                msgElement.textContent = message;
+                messagesDiv.appendChild(msgElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                input.value = '';
+            }
+        }
+
+        function handleChatKeypress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
 
         // Register service worker for PWA
         if ('serviceWorker' in navigator) {
@@ -793,12 +1011,10 @@
             });
         }
 
-        // Initialize
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if demo mode should be shown
-            if (window.location.hash === '#demo') {
-                showDemo();
-            }
+            loadUserFromStorage();
+            loadProfilePic();
         });
     </script>
 </body>
