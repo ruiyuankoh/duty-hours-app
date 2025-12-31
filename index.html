@@ -7,559 +7,78 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Duty Hours">
-    <meta name="description" content="Duty Hours System - Manage duties and track your hours">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <title>Duty Hours System</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Auth Styles */
-        .auth-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .auth-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo h1 {
-            font-size: 28px;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .logo p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .toggle-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .toggle-link a {
-            color: #667eea;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .error {
-            background-color: #fee;
-            color: #c33;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .error.show {
-            display: block;
-        }
-
-        .success {
-            background-color: #efe;
-            color: #3c3;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .success.show {
-            display: block;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Dashboard Styles */
-        .dashboard-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .dashboard-header {
-            background: white;
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dashboard-header h2 {
-            color: #333;
-            font-size: 20px;
-        }
-
-        .logout-btn {
-            background: #ff6b6b;
-            padding: 8px 16px;
-            font-size: 13px;
-            width: auto;
-        }
-
-        /* Tab Navigation */
-        .tab-navigation {
-            background: white;
-            display: flex;
-            border-bottom: 2px solid #f0f0f0;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .tab-btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 12px 15px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            color: #999;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .tab-btn:hover {
-            color: #667eea;
-        }
-
-        /* Tab Content */
-        .tab-content {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding: 20px;
-        }
-
-        .tab-pane {
-            display: none;
-        }
-
-        .tab-pane.active {
-            display: block;
-        }
-
-        /* Content Styles */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            color: #666;
-            font-size: 11px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .stat-card .value {
-            color: #667eea;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .section {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .duty-list {
-            list-style: none;
-        }
-
-        .duty-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #667eea;
-        }
-
-        .duty-item h4 {
-            color: #333;
-            margin-bottom: 5px;
-            font-size: 15px;
-        }
-
-        .duty-item p {
-            color: #666;
-            font-size: 12px;
-            margin-bottom: 8px;
-        }
-
-        .duty-item button {
-            width: 100%;
-            padding: 8px;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .status-open {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .status-verified {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-
-        .status-completed {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-
-        .status-in-progress {
-            background: #fce4ec;
-            color: #c2185b;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        /* Profile Picture */
-        .profile-pic-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .profile-pic {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #f0f0f0;
-            display: inline-block;
-            overflow: hidden;
-            object-fit: cover;
-            border: 3px solid #667eea;
-        }
-
-        .pic-upload-btn {
-            width: 100%;
-            padding: 8px;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-
-        #profilePicInput {
-            display: none;
-        }
-
-        /* User Management Table */
-        .user-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 12px;
-        }
-
-        .user-table th {
-            background: #f5f5f5;
-            padding: 10px;
-            text-align: left;
-            font-weight: 600;
-            color: #333;
-            font-size: 12px;
-            border-bottom: 2px solid #ddd;
-        }
-
-        .user-table td {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .user-table tr:hover {
-            background: #f9f9f9;
-        }
-
-        .role-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .role-admin {
-            background: #ffe0e0;
-            color: #c33;
-        }
-
-        .role-user {
-            background: #e0f2f1;
-            color: #00695c;
-        }
-
-        .role-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .action-btn {
-            padding: 5px 10px;
-            font-size: 10px;
-            width: auto;
-            margin-right: 3px;
-        }
-
-        /* Chat Styles */
-        .chat-search {
-            margin-bottom: 15px;
-        }
-
-        .chat-search input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .user-list {
-            list-style: none;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .user-item {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-left: 4px solid #667eea;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-item:hover {
-            background: #e8e9fa;
-        }
-
-        .user-item-pic {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #ddd;
-            object-fit: cover;
-        }
-
-        .user-item-info h4 {
-            color: #333;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-
-        .user-item-info p {
-            color: #999;
-            font-size: 11px;
-        }
-
-        .chat-window {
-            display: none;
-        }
-
-        .chat-messages {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            height: 300px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .message.own {
-            background: #667eea;
-            color: white;
-            text-align: right;
-        }
-
-        .message.other {
-            background: white;
-            color: #333;
-            border: 1px solid #ddd;
-        }
-
-        .demo-notice {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 12px;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 600px) {
-            .auth-card {
-                padding: 25px;
-            }
-
-            .dashboard-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .logout-btn {
-                margin-top: 10px;
-                width: 100%;
-            }
-
-            .tab-content {
-                padding: 15px;
-            }
-
-            .stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .user-table {
-                font-size: 11px;
-            }
-
-            .user-table th,
-            .user-table td {
-                padding: 6px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .auth-card { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); padding: 40px; width: 100%; max-width: 400px; }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo h1 { font-size: 28px; color: #333; margin-bottom: 10px; }
+        .logo p { color: #666; font-size: 14px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+        button.small { width: auto; padding: 6px 12px; font-size: 12px; }
+        
+        .toggle-link { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+        .toggle-link a { color: #667eea; cursor: pointer; text-decoration: none; font-weight: 600; }
+        
+        .error { background-color: #fee; color: #c33; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; display: none; }
+        .error.show { display: block; }
+        .success { background-color: #efe; color: #3c3; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; display: none; }
+        .success.show { display: block; }
+        .hidden { display: none !important; }
+        
+        .dashboard-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .dashboard-header { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .dashboard-header h2 { color: #333; font-size: 20px; }
+        .logout-btn { background: #ff6b6b; padding: 8px 16px; font-size: 13px; width: auto; }
+        
+        .tab-navigation { background: white; display: flex; border-bottom: 2px solid #f0f0f0; overflow-x: auto; }
+        .tab-btn { flex: 1; min-width: 80px; padding: 12px 15px; background: none; border: none; cursor: pointer; font-size: 13px; font-weight: 600; color: #999; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
+        
+        .tab-content { flex: 1; overflow-y: auto; padding: 20px; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        
+        .section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section h3 { color: #333; margin-bottom: 15px; font-size: 16px; }
+        
+        .profile-pic { width: 100px; height: 100px; border-radius: 50%; background: #f0f0f0; object-fit: cover; border: 3px solid #667eea; }
+        .profile-pic-container { text-align: center; margin-bottom: 20px; }
+        #profilePicInput { display: none; }
+        
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        .user-table th { background: #f5f5f5; padding: 10px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #ddd; }
+        .user-table td { padding: 10px; border-bottom: 1px solid #eee; color: #666; }
+        .user-table tr:hover { background: #f9f9f9; }
+        
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+        .badge-admin { background: #ffe0e0; color: #c33; }
+        .badge-user { background: #e0f2f1; color: #00695c; }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        
+        .user-item { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid #667eea; }
+        .user-item:hover { background: #e8e9fa; }
+        .user-item h4 { color: #333; font-size: 13px; margin-bottom: 2px; }
+        .user-item p { color: #999; font-size: 11px; }
+        
+        .chat-messages { background: #f8f9fa; padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto; margin-bottom: 15px; }
+        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
+        .message.own { background: #667eea; color: white; text-align: right; }
+        .message.other { background: white; color: #333; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -578,11 +97,11 @@
             <form id="signInForm">
                 <h3 style="margin-bottom: 20px; color: #333; text-align: center;">Sign In</h3>
                 <div class="form-group">
-                    <label for="signInEmail">Email</label>
+                    <label>Email</label>
                     <input type="email" id="signInEmail" placeholder="your@email.com" required>
                 </div>
                 <div class="form-group">
-                    <label for="signInPassword">Password</label>
+                    <label>Password</label>
                     <input type="password" id="signInPassword" placeholder="••••••••" required>
                 </div>
                 <button type="submit">Sign In</button>
@@ -592,15 +111,15 @@
             <form id="signUpForm" class="hidden">
                 <h3 style="margin-bottom: 20px; color: #333; text-align: center;">Create Account</h3>
                 <div class="form-group">
-                    <label for="signUpName">Full Name</label>
+                    <label>Full Name</label>
                     <input type="text" id="signUpName" placeholder="Your name" required>
                 </div>
                 <div class="form-group">
-                    <label for="signUpEmail">Email</label>
+                    <label>Email</label>
                     <input type="email" id="signUpEmail" placeholder="your@email.com" required>
                 </div>
                 <div class="form-group">
-                    <label for="signUpPassword">Password</label>
+                    <label>Password</label>
                     <input type="password" id="signUpPassword" placeholder="••••••••" required>
                 </div>
                 <button type="submit">Request Account</button>
@@ -612,8 +131,7 @@
             </div>
 
             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999; text-align: center;">
-                <p>Demo Admin: ruiyuan.koh@gmail.com</p>
-                <p><a onclick="showDemo()" style="color: #667eea; cursor: pointer; text-decoration: none;">View Demo</a></p>
+                <p>Demo Admin: ruiyuan.koh@gmail.com / password</p>
             </div>
         </div>
     </div>
@@ -625,7 +143,6 @@
             <button class="logout-btn" onclick="logout()">Sign Out</button>
         </div>
 
-        <!-- Tab Navigation -->
         <div class="tab-navigation">
             <button class="tab-btn active" onclick="switchTab('home')">🏠 Home</button>
             <button class="tab-btn" onclick="switchTab('profile')">👤 Profile</button>
@@ -633,61 +150,16 @@
             <button class="tab-btn admin-tab hidden" onclick="switchTab('admin')">⚙️ Admin</button>
         </div>
 
-        <!-- Tab Content -->
         <div class="tab-content">
             <!-- Home Tab -->
             <div id="homeTab" class="tab-pane active">
-                <div class="demo-notice">
-                    📌 <strong>Demo Mode:</strong> This is a preview with sample data.
-                </div>
-
-                <div class="stats">
-                    <div class="stat-card">
-                        <h3>Total Hours</h3>
-                        <div class="value">24</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Completed</h3>
-                        <div class="value">4</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Verified</h3>
-                        <div class="value">3</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Pending</h3>
-                        <div class="value">2</div>
-                    </div>
-                </div>
-
                 <div class="section">
                     <h3>📋 Available Duties</h3>
-                    <ul class="duty-list">
-                        <li class="duty-item">
-                            <h4>Classroom Cleaning <span class="status-badge status-open">Open</span></h4>
-                            <p>📅 January 15, 2026 • ⏰ 09:00 - 11:00 (2h)</p>
-                            <button>Sign Up</button>
-                        </li>
-                        <li class="duty-item">
-                            <h4>Library Organization <span class="status-badge status-open">Open</span></h4>
-                            <p>📅 January 16, 2026 • ⏰ 14:00 - 16:00 (2h)</p>
-                            <button>Sign Up</button>
-                        </li>
-                    </ul>
+                    <p style="color: #999;">No duties available yet</p>
                 </div>
-
                 <div class="section">
                     <h3>✅ My Signups</h3>
-                    <ul class="duty-list">
-                        <li class="duty-item">
-                            <h4>Event Setup <span class="status-badge status-verified">Verified</span></h4>
-                            <p>📅 January 10, 2026 • ⏰ 10:00 - 13:00 (3h)</p>
-                        </li>
-                        <li class="duty-item">
-                            <h4>Grounds Maintenance <span class="status-badge status-completed">Completed</span></h4>
-                            <p>📅 January 5, 2026 • ⏰ 08:00 - 10:00 (2h)</p>
-                        </li>
-                    </ul>
+                    <p style="color: #999;">You haven't signed up for any duties yet</p>
                 </div>
             </div>
 
@@ -698,35 +170,14 @@
                     <div class="profile-pic-container">
                         <img id="profilePicImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='40' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E" class="profile-pic" alt="Profile">
                         <input type="file" id="profilePicInput" accept="image/*" onchange="uploadProfilePic()">
-                        <button class="pic-upload-btn" onclick="document.getElementById('profilePicInput').click()">📷 Upload Picture</button>
+                        <button class="small" onclick="document.getElementById('profilePicInput').click()">📷 Upload Picture</button>
                     </div>
                     <div style="padding: 20px 0;">
-                        <p style="margin-bottom: 15px;"><strong>Name:</strong> <span id="profileName">Demo User</span></p>
-                        <p style="margin-bottom: 15px;"><strong>Email:</strong> <span id="profileEmail">user@example.com</span></p>
-                        <p style="margin-bottom: 15px;"><strong>Role:</strong> <span class="role-badge role-user" id="profileRole">User</span></p>
-                        <p style="margin-bottom: 15px;"><strong>Status:</strong> <span id="profileStatus">Active</span></p>
-                        <p style="margin-bottom: 15px;"><strong>Total Hours:</strong> 24 hours</p>
-                        <p style="margin-bottom: 15px;"><strong>Completed Duties:</strong> 4</p>
-                        <p style="margin-bottom: 15px;"><strong>Member Since:</strong> January 1, 2026</p>
+                        <p style="margin-bottom: 15px;"><strong>Name:</strong> <span id="profileName">-</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Email:</strong> <span id="profileEmail">-</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Role:</strong> <span id="profileRole" class="badge badge-user">User</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Status:</strong> <span id="profileStatus">-</span></p>
                     </div>
-                </div>
-
-                <div class="section">
-                    <h3>🏆 Achievements</h3>
-                    <ul class="duty-list">
-                        <li class="duty-item">
-                            <h4>🥇 First Duty</h4>
-                            <p>Completed your first duty</p>
-                        </li>
-                        <li class="duty-item">
-                            <h4>⭐ 10 Hours</h4>
-                            <p>Accumulated 10 duty hours</p>
-                        </li>
-                        <li class="duty-item">
-                            <h4>✨ 20 Hours</h4>
-                            <p>Accumulated 20 duty hours</p>
-                        </li>
-                    </ul>
                 </div>
             </div>
 
@@ -734,36 +185,22 @@
             <div id="chatTab" class="tab-pane">
                 <div class="section">
                     <h3>💬 Messages</h3>
-                    
                     <div id="chatList">
-                        <div class="chat-search">
-                            <input type="text" id="chatSearch" placeholder="Search users..." onkeyup="searchUsers()">
+                        <input type="text" id="chatSearch" placeholder="Search users..." onkeyup="searchUsers()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px;">
+                        <div id="userList" style="max-height: 400px; overflow-y: auto;">
+                            <!-- Users will be listed here -->
                         </div>
-
-                        <ul class="user-list" id="userList">
-                            <!-- Users will be populated here -->
-                        </ul>
                     </div>
 
-                    <div class="chat-window" id="chatWindow">
-                        <button onclick="closeChat()" style="width: auto; padding: 5px 10px; font-size: 12px; margin-bottom: 10px;">← Back</button>
-                        <h4 id="chatUserName" style="margin-bottom: 10px; color: #333;"></h4>
+                    <div class="section hidden" id="chatWindow">
+                        <button class="small" onclick="closeChat()">← Back</button>
+                        <h4 id="chatUserName" style="margin: 10px 0; color: #333;"></h4>
                         <div class="chat-messages" id="chatMessages"></div>
                         <div class="form-group">
-                            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeypress(event)">
+                            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendMessage()">
                         </div>
                         <button onclick="sendMessage()">Send Message</button>
                     </div>
-                </div>
-
-                <div class="section">
-                    <h3>📣 Group Announcements</h3>
-                    <ul class="duty-list">
-                        <li class="duty-item">
-                            <h4>📢 Welcome to Duty Hours!</h4>
-                            <p>Welcome to the Duty Hours System. Check the announcements regularly for updates.</p>
-                        </li>
-                    </ul>
                 </div>
             </div>
 
@@ -776,240 +213,113 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="pendingTable">
-                            <!-- Pending users will be shown here -->
+                            <!-- Pending users here -->
                         </tbody>
                     </table>
                 </div>
 
                 <div class="section">
                     <h3>👥 Approved Users</h3>
-                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Total Users: <strong id="totalUsers">5</strong></p>
                     <table class="user-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
-                                <th>Hours</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="userTableBody">
-                            <!-- Users will be populated here -->
+                            <!-- Users here -->
                         </tbody>
                     </table>
-                </div>
-
-                <div class="section">
-                    <h3>📊 Duty Management</h3>
-                    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Active Duties: <strong>2</strong> | Completed: <strong>4</strong></p>
-                    <ul class="duty-list">
-                        <li class="duty-item">
-                            <h4>Event Setup <span class="status-badge status-in-progress">In Progress</span></h4>
-                            <p>Participants: 3 | Started: January 10, 2026</p>
-                            <button>✓ Mark Completed</button>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="section">
-                    <h3>➕ Create New Duty</h3>
-                    <form onsubmit="return false;">
-                        <div class="form-group">
-                            <label>Duty Name</label>
-                            <input type="text" placeholder="e.g., Classroom Cleaning">
-                        </div>
-                        <div class="form-group">
-                            <label>Type</label>
-                            <select>
-                                <option>General</option>
-                                <option>Maintenance</option>
-                                <option>Event</option>
-                                <option>Training</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Date</label>
-                            <input type="date">
-                        </div>
-                        <div class="form-group">
-                            <label>Time Start</label>
-                            <input type="time">
-                        </div>
-                        <div class="form-group">
-                            <label>Time End</label>
-                            <input type="time">
-                        </div>
-                        <button type="button">Create Duty</button>
-                    </form>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Data storage
         let currentUser = null;
         let allUsers = [
-            { id: 1, name: 'Admin User', email: 'admin@example.com', role: 'admin', hours: 0, status: 'active', pic: null },
-            { id: 2, name: 'John Doe', email: 'john@example.com', role: 'user', hours: 8, status: 'active', pic: null },
-            { id: 3, name: 'Jane Smith', email: 'jane@example.com', role: 'user', hours: 12, status: 'active', pic: null },
-            { id: 4, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', hours: 5, status: 'active', pic: null },
-            { id: 5, name: 'Alice Brown', email: 'alice@example.com', role: 'user', hours: 16, status: 'active', pic: null }
+            { id: 1, name: 'Admin User', email: 'ruiyuan.koh@gmail.com', password: 'password', role: 'admin', status: 'active', pic: null }
         ];
-
         let pendingUsers = [];
         let selectedChatUser = null;
         let chatMessages = {};
 
-        // Load data from localStorage
         function loadData() {
             const saved = localStorage.getItem('currentUser');
             if (saved) {
                 currentUser = JSON.parse(saved);
                 showDashboard();
             }
-
             const savedUsers = localStorage.getItem('allUsers');
-            if (savedUsers) {
-                allUsers = JSON.parse(savedUsers);
-            }
-
+            if (savedUsers) allUsers = JSON.parse(savedUsers);
             const savedPending = localStorage.getItem('pendingUsers');
-            if (savedPending) {
-                pendingUsers = JSON.parse(savedPending);
-            }
-
+            if (savedPending) pendingUsers = JSON.parse(savedPending);
             const savedMessages = localStorage.getItem('chatMessages');
-            if (savedMessages) {
-                chatMessages = JSON.parse(savedMessages);
-            }
+            if (savedMessages) chatMessages = JSON.parse(savedMessages);
         }
 
-        // Save data to localStorage
         function saveData() {
-            if (currentUser) {
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            }
             localStorage.setItem('allUsers', JSON.stringify(allUsers));
             localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
             localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+            if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
         }
 
         function toggleForms() {
-            const signInForm = document.getElementById('signInForm');
-            const signUpForm = document.getElementById('signUpForm');
-            const toggleText = document.getElementById('toggleText');
-
-            signInForm.classList.toggle('hidden');
-            signUpForm.classList.toggle('hidden');
-
-            if (signUpForm.classList.contains('hidden')) {
-                toggleText.innerHTML = "Don't have an account? <a onclick=\"toggleForms()\">Sign Up</a>";
-            } else {
-                toggleText.innerHTML = "Already have an account? <a onclick=\"toggleForms()\">Sign In</a>";
-            }
+            document.getElementById('signInForm').classList.toggle('hidden');
+            document.getElementById('signUpForm').classList.toggle('hidden');
+            document.getElementById('toggleText').innerHTML = document.getElementById('signUpForm').classList.contains('hidden') 
+                ? "Don't have an account? <a onclick=\"toggleForms()\">Sign Up</a>"
+                : "Already have an account? <a onclick=\"toggleForms()\">Sign In</a>";
         }
 
-        function showDemo() {
-            currentUser = { name: 'Demo User', email: 'user@example.com', role: 'user', status: 'active', pic: null };
-            saveData();
-            showDashboard();
+        function showError(msg) {
+            const div = document.getElementById('errorMessage');
+            div.textContent = msg;
+            div.classList.add('show');
+            setTimeout(() => div.classList.remove('show'), 3000);
         }
 
-        function showDashboard() {
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('dashboardContainer').classList.remove('hidden');
-
-            // Update profile info
-            document.getElementById('profileName').textContent = currentUser.name;
-            document.getElementById('profileEmail').textContent = currentUser.email;
-            document.getElementById('profileStatus').textContent = currentUser.status === 'active' ? '✅ Active' : '⏳ Pending Approval';
-            
-            const roleSpan = document.getElementById('profileRole');
-            if (currentUser.role === 'admin') {
-                roleSpan.textContent = 'Admin';
-                roleSpan.className = 'role-badge role-admin';
-            } else {
-                roleSpan.textContent = 'User';
-                roleSpan.className = 'role-badge role-user';
-            }
-
-            // Load profile picture
-            if (currentUser.pic) {
-                document.getElementById('profilePicImg').src = currentUser.pic;
-            }
-
-            // Show admin tab only for admins
-            const adminTab = document.querySelector('.admin-tab');
-            if (currentUser.role === 'admin') {
-                adminTab.classList.remove('hidden');
-                updateAdminPanel();
-            } else {
-                adminTab.classList.add('hidden');
-            }
-
-            // Populate chat users
-            populateChatUsers();
+        function showSuccess(msg) {
+            const div = document.getElementById('successMessage');
+            div.textContent = msg;
+            div.classList.add('show');
+            setTimeout(() => div.classList.remove('show'), 3000);
         }
 
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            document.getElementById('dashboardContainer').classList.add('hidden');
-            document.getElementById('authContainer').classList.remove('hidden');
-            switchTab('home');
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-pane').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        // Handle sign in
         document.getElementById('signInForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('signInEmail').value;
             const password = document.getElementById('signInPassword').value;
             
-            // Check if user exists in approved users
-            const user = allUsers.find(u => u.email === email);
+            const user = allUsers.find(u => u.email === email && u.password === password && u.status === 'active');
             if (user) {
                 currentUser = { ...user };
                 saveData();
                 showDashboard();
             } else {
-                showError('User not found or account not approved yet');
+                showError('Invalid credentials or account not approved');
             }
         });
 
-        // Handle sign up
         document.getElementById('signUpForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('signUpName').value;
             const email = document.getElementById('signUpEmail').value;
             const password = document.getElementById('signUpPassword').value;
             
-            // Check if email already exists
             if (allUsers.find(u => u.email === email) || pendingUsers.find(u => u.email === email)) {
                 showError('Email already registered');
                 return;
             }
 
-            // Add to pending users
             pendingUsers.push({
                 id: Date.now(),
                 name: name,
@@ -1021,14 +331,47 @@
             });
 
             saveData();
-            showSuccess('Account request submitted! Please wait for admin approval.');
-            
-            // Reset form
+            showSuccess('Account request submitted! Wait for admin approval.');
             document.getElementById('signUpForm').reset();
             setTimeout(() => toggleForms(), 2000);
         });
 
-        // Profile picture upload
+        function showDashboard() {
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('dashboardContainer').classList.remove('hidden');
+            
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profileStatus').textContent = currentUser.status === 'active' ? '✅ Active' : '⏳ Pending';
+            
+            if (currentUser.pic) {
+                document.getElementById('profilePicImg').src = currentUser.pic;
+            }
+
+            if (currentUser.role === 'admin') {
+                document.querySelector('.admin-tab').classList.remove('hidden');
+                updateAdminPanel();
+            } else {
+                document.querySelector('.admin-tab').classList.add('hidden');
+            }
+
+            populateChatUsers();
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('dashboardContainer').classList.add('hidden');
+            document.getElementById('authContainer').classList.remove('hidden');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
         function uploadProfilePic() {
             const input = document.getElementById('profilePicInput');
             if (input.files && input.files[0]) {
@@ -1037,165 +380,113 @@
                     document.getElementById('profilePicImg').src = e.target.result;
                     currentUser.pic = e.target.result;
                     saveData();
+                    showSuccess('Profile picture updated!');
                 };
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // Chat functions
         function populateChatUsers() {
             const userList = document.getElementById('userList');
             userList.innerHTML = '';
-
-            allUsers.filter(u => u.email !== currentUser.email).forEach(user => {
-                const li = document.createElement('li');
-                li.className = 'user-item';
-                li.onclick = () => openChat(user);
-                li.innerHTML = `
-                    <img src="${user.pic || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ddd%22/%3E%3Ctext x=%2250%22 y=%2260%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23999%22%3E👤%3C/text%3E%3C/svg%3E'}" class="user-item-pic">
-                    <div class="user-item-info">
-                        <h4>${user.name}</h4>
-                        <p>${user.email}</p>
-                    </div>
-                `;
-                userList.appendChild(li);
+            allUsers.filter(u => u.email !== currentUser.email && u.status === 'active').forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.onclick = () => openChat(user);
+                div.innerHTML = `<h4>${user.name}</h4><p>${user.email}</p>`;
+                userList.appendChild(div);
             });
         }
 
         function searchUsers() {
             const search = document.getElementById('chatSearch').value.toLowerCase();
-            const userList = document.getElementById('userList');
-            const items = userList.querySelectorAll('.user-item');
-
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(search) ? 'flex' : 'none';
+            document.querySelectorAll('#userList .user-item').forEach(item => {
+                item.style.display = item.textContent.toLowerCase().includes(search) ? 'block' : 'none';
             });
         }
 
         function openChat(user) {
             selectedChatUser = user;
-            document.getElementById('chatList').style.display = 'none';
-            document.getElementById('chatWindow').style.display = 'block';
-            document.getElementById('chatUserName').textContent = `💬 Chat with ${user.name}`;
-            
+            document.getElementById('chatList').classList.add('hidden');
+            document.getElementById('chatWindow').classList.remove('hidden');
+            document.getElementById('chatUserName').textContent = `💬 ${user.name}`;
             const key = `${currentUser.email}-${user.email}`;
-            if (!chatMessages[key]) {
-                chatMessages[key] = [];
-            }
-
+            if (!chatMessages[key]) chatMessages[key] = [];
             displayMessages(key);
         }
 
         function closeChat() {
-            document.getElementById('chatList').style.display = 'block';
-            document.getElementById('chatWindow').style.display = 'none';
+            document.getElementById('chatList').classList.remove('hidden');
+            document.getElementById('chatWindow').classList.add('hidden');
             selectedChatUser = null;
         }
 
         function displayMessages(key) {
-            const messagesDiv = document.getElementById('chatMessages');
-            messagesDiv.innerHTML = '';
-
+            const div = document.getElementById('chatMessages');
+            div.innerHTML = '';
             chatMessages[key].forEach(msg => {
-                const msgElement = document.createElement('div');
-                msgElement.className = `message ${msg.sender === currentUser.email ? 'own' : 'other'}`;
-                msgElement.textContent = msg.text;
-                messagesDiv.appendChild(msgElement);
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${msg.sender === currentUser.email ? 'own' : 'other'}`;
+                msgDiv.textContent = msg.text;
+                div.appendChild(msgDiv);
             });
-
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            div.scrollTop = div.scrollHeight;
         }
 
         function sendMessage() {
             if (!selectedChatUser) return;
-
             const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (message) {
+            const msg = input.value.trim();
+            if (msg) {
                 const key = `${currentUser.email}-${selectedChatUser.email}`;
-                if (!chatMessages[key]) {
-                    chatMessages[key] = [];
-                }
-
-                chatMessages[key].push({
-                    sender: currentUser.email,
-                    text: message,
-                    time: new Date().toLocaleTimeString()
-                });
-
+                if (!chatMessages[key]) chatMessages[key] = [];
+                chatMessages[key].push({ sender: currentUser.email, text: msg });
                 saveData();
                 displayMessages(key);
                 input.value = '';
             }
         }
 
-        function handleChatKeypress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
-
-        // Admin functions
         function updateAdminPanel() {
-            // Update pending approvals
             const pendingTable = document.getElementById('pendingTable');
             pendingTable.innerHTML = '';
-
             pendingUsers.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${user.name}</td>
                     <td>${user.email}</td>
-                    <td><span class="status-badge status-pending">Pending</span></td>
                     <td>
-                        <button class="action-btn" onclick="approveUser(${user.id})">✓ Approve</button>
-                        <button class="action-btn" style="background: #ff6b6b;" onclick="rejectUser(${user.id})">✗ Reject</button>
+                        <button class="small" onclick="approveUser(${user.id})">✓ Approve</button>
+                        <button class="small" style="background: #ff6b6b;" onclick="rejectUser(${user.id})">✗ Reject</button>
                     </td>
                 `;
                 pendingTable.appendChild(row);
             });
 
-            // Update approved users table
             const userTableBody = document.getElementById('userTableBody');
             userTableBody.innerHTML = '';
-
             allUsers.forEach(user => {
                 const row = document.createElement('tr');
-                const roleClass = user.role === 'admin' ? 'role-admin' : 'role-user';
+                const roleClass = user.role === 'admin' ? 'badge-admin' : 'badge-user';
                 const roleText = user.role === 'admin' ? 'Admin' : 'User';
                 row.innerHTML = `
                     <td>${user.name}</td>
                     <td>${user.email}</td>
-                    <td><span class="role-badge ${roleClass}">${roleText}</span></td>
-                    <td>${user.hours}</td>
-                    <td>
-                        <button class="action-btn" onclick="makeAdmin(${user.id})">Make Admin</button>
-                    </td>
+                    <td><span class="badge ${roleClass}">${roleText}</span></td>
+                    <td><button class="small" onclick="makeAdmin(${user.id})">Make Admin</button></td>
                 `;
                 userTableBody.appendChild(row);
             });
-
-            document.getElementById('totalUsers').textContent = allUsers.length;
         }
 
         function approveUser(userId) {
             const user = pendingUsers.find(u => u.id === userId);
             if (user) {
-                allUsers.push({
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: 'user',
-                    hours: 0,
-                    status: 'active',
-                    pic: null
-                });
-
+                allUsers.push({ ...user, status: 'active' });
                 pendingUsers = pendingUsers.filter(u => u.id !== userId);
                 saveData();
                 updateAdminPanel();
-                alert(`User ${user.name} approved!`);
+                showSuccess(`${user.name} approved!`);
             }
         }
 
@@ -1203,7 +494,7 @@
             pendingUsers = pendingUsers.filter(u => u.id !== userId);
             saveData();
             updateAdminPanel();
-            alert('User rejected');
+            showSuccess('User rejected');
         }
 
         function makeAdmin(userId) {
@@ -1212,36 +503,15 @@
                 user.role = 'admin';
                 saveData();
                 updateAdminPanel();
-                alert(`${user.name} is now an admin!`);
+                showSuccess(`${user.name} is now an admin!`);
             }
         }
 
-        // Error and success messages
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-            setTimeout(() => errorDiv.classList.remove('show'), 3000);
-        }
-
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.classList.add('show');
-            setTimeout(() => successDiv.classList.remove('show'), 3000);
-        }
-
-        // Register service worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(err => {
-                console.log('Service Worker registration failed:', err);
-            });
+            navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
-        });
+        document.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
 </html>
