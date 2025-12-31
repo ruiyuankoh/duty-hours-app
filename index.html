@@ -2,375 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <meta name="theme-color" content="#667eea">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Duty Hours">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" type="image/png" href="/icon-192.png">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duty Hours System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; }
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; flex-direction: column; }
-        
-        .auth-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .auth-card { background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); padding: 40px; width: 100%; max-width: 400px; }
-        .logo { text-align: center; margin-bottom: 30px; }
-        .logo h1 { font-size: 28px; color: #333; margin-bottom: 10px; }
-        .logo p { color: #666; font-size: 14px; }
-        
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
-        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-        
-        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
-        button.small { width: auto; padding: 6px 12px; font-size: 12px; }
-        
-        .toggle-link { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
-        .toggle-link a { color: #667eea; cursor: pointer; text-decoration: none; font-weight: 600; }
-        
-        .error { background-color: #fee; color: #c33; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; display: none; }
-        .error.show { display: block; }
-        .success { background-color: #efe; color: #3c3; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; display: none; }
-        .success.show { display: block; }
-        .hidden { display: none !important; }
-        
-        .dashboard-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .dashboard-header { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .dashboard-header h2 { color: #333; font-size: 20px; }
-        .logout-btn { background: #ff6b6b; padding: 8px 16px; font-size: 13px; width: auto; }
-        
-        .tab-navigation { background: white; display: flex; border-bottom: 2px solid #f0f0f0; overflow-x: auto; }
-        .tab-btn { flex: 1; min-width: 80px; padding: 12px 15px; background: none; border: none; cursor: pointer; font-size: 13px; font-weight: 600; color: #999; border-bottom: 3px solid transparent; }
-        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
-        
-        .tab-content { flex: 1; overflow-y: auto; padding: 20px; }
-        .tab-pane { display: none; }
-        .tab-pane.active { display: block; }
-        
-        .section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .section h3 { color: #333; margin-bottom: 15px; font-size: 16px; }
-        
-        .profile-pic { width: 100px; height: 100px; border-radius: 50%; background: #f0f0f0; object-fit: cover; border: 3px solid #667eea; }
-        .profile-pic-container { text-align: center; margin-bottom: 20px; }
-        #profilePicInput { display: none; }
-        
-        .user-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-        .user-table th { background: #f5f5f5; padding: 10px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #ddd; }
-        .user-table td { padding: 10px; border-bottom: 1px solid #eee; color: #666; }
-        .user-table tr:hover { background: #f9f9f9; }
-        
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
-        .badge-admin { background: #ffe0e0; color: #c33; }
-        .badge-user { background: #e0f2f1; color: #00695c; }
-        .badge-pending { background: #fff3cd; color: #856404; }
-        
-        .user-item { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid #667eea; }
-        .user-item:hover { background: #e8e9fa; }
-        .user-item h4 { color: #333; font-size: 13px; margin-bottom: 2px; }
-        .user-item p { color: #999; font-size: 11px; }
-        
-        .chat-container { display: flex; gap: 15px; height: 100%; }
-        .chat-list { flex: 0 0 200px; background: white; border-radius: 8px; overflow-y: auto; padding: 10px; }
-        .chat-window { flex: 1; background: white; border-radius: 8px; display: flex; flex-direction: column; }
-        
-        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; }
-        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
-        .message.own { background: #667eea; color: white; text-align: right; }
-        .message.other { background: white; color: #333; border: 1px solid #ddd; }
-        
-        .chat-input { padding: 15px; display: flex; gap: 10px; border-top: 1px solid #ddd; }
-        .chat-input input { flex: 1; }
-        .chat-input button { width: auto; }
-        
-        .chat-user { padding: 8px; cursor: pointer; border-radius: 6px; margin-bottom: 5px; }
-        .chat-user.active { background: #667eea; color: white; }
-        .chat-user:hover { background: #f0f0f0; }
-        
-        @media (max-width: 768px) {
-            .chat-container { flex-direction: column; }
-            .chat-list { flex: 0 0 auto; max-height: 100px; }
-        }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .container { background: white; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 500px; width: 90%; padding: 30px; }
+        .logo { text-align: center; margin-bottom: 20px; font-size: 24px; }
+        h2 { text-align: center; margin-bottom: 20px; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { opacity: 0.9; }
+        .toggle-link { text-align: center; margin-top: 15px; }
+        .toggle-link a { color: #667eea; cursor: pointer; text-decoration: none; }
+        .hidden { display: none; }
+        .error { color: red; font-size: 12px; margin-top: 5px; }
+        .success { color: green; font-size: 12px; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <!-- Auth Container -->
-    <div id="authContainer" class="auth-container">
-        <div class="auth-card">
-            <div class="logo">
-                <h1>⏱️ Duty Hours</h1>
-                <p>Manage duties and track your hours</p>
+    <div class="container">
+        <div class="logo">⏰ Duty Hours</div>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Manage duties and track your hours</p>
+
+        <!-- Sign In Form -->
+        <div id="signInForm">
+            <h2>Sign In</h2>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signInEmail" placeholder="your@email.com">
             </div>
-
-            <div class="error" id="errorMessage"></div>
-            <div class="success" id="successMessage"></div>
-
-            <!-- Sign In Form -->
-            <form id="signInForm">
-                <h3 style="margin-bottom: 20px; color: #333; text-align: center;">Sign In</h3>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="signInEmail" placeholder="your@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="signInPassword" placeholder="••••••••" required>
-                </div>
-                <button type="submit">Sign In</button>
-                <div class="toggle-link">
-                    Don't have an account? <a onclick="toggleForms()">Sign Up</a>
-                </div>
-                <div class="toggle-link">
-                    <a onclick="showForgotPassword()" style="font-size: 12px;">Forgot Password?</a>
-                </div>
-            </form>
-
-            <!-- Sign Up Form -->
-            <form id="signUpForm" class="hidden">
-                <h3 style="margin-bottom: 20px; color: #333; text-align: center;">Create Account</h3>
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="signUpName" placeholder="Your name" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="signUpEmail" placeholder="your@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="signUpPassword" placeholder="••••••••" required>
-                </div>
-                <div class="form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" id="signUpConfirmPassword" placeholder="••••••••" required>
-                </div>
-                <p style="font-size: 12px; color: #999; margin-bottom: 15px;">Your account will be reviewed by an admin</p>
-                <button type="submit">Sign Up</button>
-                <div class="toggle-link">
-                    Already have an account? <a onclick="toggleForms()">Sign In</a>
-                </div>
-            </form>
-
-            <!-- Forgot Password Form -->
-            <form id="forgotPasswordForm" class="hidden">
-                <h3 style="margin-bottom: 20px; color: #333; text-align: center;">Reset Password</h3>
-                <p style="font-size: 12px; color: #999; margin-bottom: 15px;">Enter your email to receive password reset instructions</p>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="resetEmail" placeholder="your@email.com" required>
-                </div>
-                <button type="submit">Send Reset Link</button>
-                <div class="toggle-link">
-                    <a onclick="showSignIn()">Back to Sign In</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Dashboard Container -->
-    <div id="dashboardContainer" class="dashboard-wrapper hidden">
-        <div class="dashboard-header">
-            <h2>⏱️ Duty Hours System</h2>
-            <button class="logout-btn" onclick="logout()">Sign Out</button>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signInPassword" placeholder="••••••••">
+                <a onclick="showForgotPassword()" style="font-size: 12px; color: #667eea; cursor: pointer;">Forgot Password?</a>
+            </div>
+            <button onclick="signIn()">Sign In</button>
+            <div id="signInError" class="error"></div>
+            <div class="toggle-link">
+                Don't have an account? <a onclick="toggleForms()">Sign Up</a>
+            </div>
         </div>
 
-        <div class="tab-navigation">
-            <button class="tab-btn active" onclick="switchTab('homeTab')">🏠 Home</button>
-            <button class="tab-btn" onclick="switchTab('profileTab')">👤 Profile</button>
-            <button class="tab-btn" onclick="switchTab('chatTab')">💬 Chat</button>
-            <button class="tab-btn" id="adminTabBtn" onclick="switchTab('adminTab')" class="hidden">⚙️ Admin</button>
+        <!-- Sign Up Form -->
+        <div id="signUpForm" class="hidden">
+            <h2>Create Account</h2>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="signUpName" placeholder="Your Name">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signUpEmail" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signUpPassword" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="signUpConfirmPassword" placeholder="••••••••">
+                <div id="passwordError" class="error"></div>
+            </div>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Your account will be reviewed by an admin</p>
+            <button onclick="signUp()">Create Account</button>
+            <div id="signUpError" class="error"></div>
+            <div class="toggle-link">
+                Already have an account? <a onclick="toggleForms()">Sign In</a>
+            </div>
         </div>
 
-        <div class="tab-content">
-            <!-- Home Tab -->
-            <div id="homeTab" class="tab-pane active">
-                <div class="section">
-                    <h3>📋 Available Duties</h3>
-                    <div id="dutiesList">
-                        <p style="color: #999;">No duties available yet</p>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>✅ My Signups</h3>
-                    <div id="mySignupsList">
-                        <p style="color: #999;">You haven't signed up for any duties yet</p>
-                    </div>
-                </div>
+        <!-- Forgot Password Form -->
+        <div id="forgotPasswordForm" class="hidden">
+            <h2>Reset Password</h2>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="resetEmail" placeholder="your@email.com">
             </div>
-
-            <!-- Profile Tab -->
-            <div id="profileTab" class="tab-pane">
-                <div class="section">
-                    <h3>👤 My Profile</h3>
-                    <div class="profile-pic-container">
-                        <img id="profilePicImg" class="profile-pic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='35' r='15' fill='%23999'/%3E%3Cpath d='M 30 60 Q 50 50 70 60' fill='%23999'/%3E%3C/svg%3E" alt="Profile">
-                        <input type="file" id="profilePicInput" accept="image/*">
-                        <button onclick="document.getElementById('profilePicInput').click()" style="width: 150px; margin-top: 10px;">📷 Upload Picture</button>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <p><strong>Name:</strong> <span id="profileName">-</span></p>
-                        <p><strong>Email:</strong> <span id="profileEmail">-</span></p>
-                        <p><strong>Role:</strong> <span id="profileRole" class="badge badge-user">User</span></p>
-                        <p><strong>Status:</strong> <span id="profileStatus">-</span></p>
-                        <p><strong>Total Hours:</strong> <span id="profileHours">0</span></p>
-                    </div>
-                </div>
+            <button onclick="resetPassword()">Send Reset Link</button>
+            <div id="resetError" class="error"></div>
+            <div class="toggle-link">
+                <a onclick="showSignIn()">Back to Sign In</a>
             </div>
+        </div>
 
-            <!-- Chat Tab -->
-            <div id="chatTab" class="tab-pane">
-                <div class="section">
-                    <h3>💬 Messages</h3>
-                    <div class="chat-container">
-                        <div class="chat-list">
-                            <input type="text" id="chatSearch" placeholder="Search users..." style="width: 100%; margin-bottom: 10px;">
-                            <div id="chatUsersList">
-                                <p style="color: #999; font-size: 12px;">No users available</p>
-                            </div>
-                        </div>
-                        <div class="chat-window">
-                            <div class="chat-messages" id="chatMessages">
-                                <p style="color: #999; text-align: center;">Select a user to start chatting</p>
-                            </div>
-                            <div class="chat-input">
-                                <input type="text" id="messageInput" placeholder="Type a message..." disabled>
-                                <button onclick="sendMessage()" disabled id="sendBtn">Send</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>📣 Announcements</h3>
-                    <div id="announcementsList">
-                        <p style="color: #999;">No announcements yet</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Tab -->
-            <div id="adminTab" class="tab-pane">
-                <div class="section">
-                    <h3>⏳ Pending Approvals</h3>
-                    <table class="user-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingTable">
-                            <!-- Pending users here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="section">
-                    <h3>👥 Approved Users</h3>
-                    <table class="user-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTableBody">
-                            <!-- Users here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="section">
-                    <h3>➕ Create New Duty</h3>
-                    <form id="createDutyForm">
-                        <div class="form-group">
-                            <label>Duty Name</label>
-                            <input type="text" id="dutyName" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Date</label>
-                            <input type="date" id="dutyDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Time Start</label>
-                            <input type="time" id="dutyTimeStart" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Time End</label>
-                            <input type="time" id="dutyTimeEnd" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Type</label>
-                            <select id="dutyType" required>
-                                <option value="">Select type</option>
-                                <option value="Cleaning">Cleaning</option>
-                                <option value="Event">Event</option>
-                                <option value="Maintenance">Maintenance</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <button type="submit">Create Duty</button>
-                    </form>
-                </div>
-            </div>
+        <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
+            Demo Admin: ruiyuan.koh@gmail.com / password
         </div>
     </div>
 
     <script>
-        let currentUser = null;
-        let allUsers = [];
-        let pendingUsers = [];
-        let duties = [];
-        let dutySignups = [];
-        let chatMessages = {};
-        let selectedChatUser = null;
-
-        // Load data on page load
-        window.addEventListener('load', function() {
-            loadData();
-            if (currentUser) {
-                showDashboard();
+        // Initialize users from localStorage
+        function initUsers() {
+            if (!localStorage.getItem('users')) {
+                const demoUser = {
+                    id: 'admin1',
+                    name: 'Admin User',
+                    email: 'ruiyuan.koh@gmail.com',
+                    password: 'password',
+                    role: 'admin',
+                    status: 'approved',
+                    hours: 0,
+                    profilePic: null
+                };
+                localStorage.setItem('users', JSON.stringify([demoUser]));
             }
-        });
-
-        function loadData() {
-            const saved = localStorage.getItem('currentUser');
-            if (saved) {
-                currentUser = JSON.parse(saved);
-            }
-            const savedUsers = localStorage.getItem('allUsers');
-            if (savedUsers) allUsers = JSON.parse(savedUsers);
-            const savedPending = localStorage.getItem('pendingUsers');
-            if (savedPending) pendingUsers = JSON.parse(savedPending);
-            const savedDuties = localStorage.getItem('duties');
-            if (savedDuties) duties = JSON.parse(savedDuties);
-            const savedSignups = localStorage.getItem('dutySignups');
-            if (savedSignups) dutySignups = JSON.parse(savedSignups);
-            const savedMessages = localStorage.getItem('chatMessages');
-            if (savedMessages) chatMessages = JSON.parse(savedMessages);
-        }
-
-        function saveData() {
-            localStorage.setItem('allUsers', JSON.stringify(allUsers));
-            localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
-            localStorage.setItem('duties', JSON.stringify(duties));
-            localStorage.setItem('dutySignups', JSON.stringify(dutySignups));
-            localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
-            if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
         }
 
         function toggleForms() {
             document.getElementById('signInForm').classList.toggle('hidden');
             document.getElementById('signUpForm').classList.toggle('hidden');
+            document.getElementById('signInError').textContent = '';
+            document.getElementById('signUpError').textContent = '';
         }
 
         function showForgotPassword() {
@@ -383,313 +128,106 @@
             document.getElementById('signInForm').classList.remove('hidden');
         }
 
-        function showError(msg) {
-            const div = document.getElementById('errorMessage');
-            div.textContent = msg;
-            div.classList.add('show');
-            setTimeout(() => div.classList.remove('show'), 3000);
-        }
-
-        function showSuccess(msg) {
-            const div = document.getElementById('successMessage');
-            div.textContent = msg;
-            div.classList.add('show');
-            setTimeout(() => div.classList.remove('show'), 3000);
-        }
-
-        // Sign In
-        document.getElementById('signInForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function signIn() {
             const email = document.getElementById('signInEmail').value;
             const password = document.getElementById('signInPassword').value;
-            
-            const user = allUsers.find(u => u.email === email && u.password === password && u.status === 'active');
-            if (user) {
-                currentUser = { ...user };
-                saveData();
-                showDashboard();
-            } else {
-                showError('Invalid credentials or account not approved');
-            }
-        });
+            const errorDiv = document.getElementById('signInError');
 
-        // Sign Up
-        document.getElementById('signUpForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+            if (!email || !password) {
+                errorDiv.textContent = 'Please fill in all fields';
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (!user) {
+                errorDiv.textContent = 'Invalid email or password';
+                return;
+            }
+
+            if (user.status !== 'approved') {
+                errorDiv.textContent = 'Your account is pending admin approval';
+                return;
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            window.location.href = '/dashboard.html';
+        }
+
+        function signUp() {
             const name = document.getElementById('signUpName').value;
             const email = document.getElementById('signUpEmail').value;
             const password = document.getElementById('signUpPassword').value;
             const confirmPassword = document.getElementById('signUpConfirmPassword').value;
-            
+            const errorDiv = document.getElementById('signUpError');
+            const passwordError = document.getElementById('passwordError');
+
+            if (!name || !email || !password || !confirmPassword) {
+                errorDiv.textContent = 'Please fill in all fields';
+                return;
+            }
+
             if (password !== confirmPassword) {
-                showError('Passwords do not match');
+                passwordError.textContent = 'Passwords do not match';
                 return;
             }
 
-            if (allUsers.find(u => u.email === email) || pendingUsers.find(u => u.email === email)) {
-                showError('Email already registered');
+            if (password.length < 6) {
+                passwordError.textContent = 'Password must be at least 6 characters';
                 return;
             }
 
-            pendingUsers.push({
-                id: Date.now(),
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (users.find(u => u.email === email)) {
+                errorDiv.textContent = 'Email already registered';
+                return;
+            }
+
+            const newUser = {
+                id: 'user_' + Date.now(),
                 name: name,
                 email: email,
                 password: password,
                 role: 'user',
                 status: 'pending',
-                pic: null
-            });
-
-            saveData();
-            showSuccess('Account request submitted! Wait for admin approval.');
-            document.getElementById('signUpForm').reset();
-            setTimeout(() => toggleForms(), 2000);
-        });
-
-        // Forgot Password
-        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('resetEmail').value;
-            const user = allUsers.find(u => u.email === email);
-            if (user) {
-                showSuccess('Password reset link sent to your email');
-                setTimeout(() => showSignIn(), 2000);
-            } else {
-                showError('Email not found');
-            }
-        });
-
-        function showDashboard() {
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('dashboardContainer').classList.remove('hidden');
-            
-            document.getElementById('profileName').textContent = currentUser.name;
-            document.getElementById('profileEmail').textContent = currentUser.email;
-            document.getElementById('profileRole').textContent = currentUser.role.toUpperCase();
-            document.getElementById('profileRole').className = 'badge ' + (currentUser.role === 'admin' ? 'badge-admin' : 'badge-user');
-            document.getElementById('profileStatus').textContent = currentUser.status === 'active' ? '✅ Active' : '⏳ Pending';
-            
-            if (currentUser.pic) {
-                document.getElementById('profilePicImg').src = currentUser.pic;
-            }
-
-            if (currentUser.role === 'admin') {
-                document.getElementById('adminTabBtn').classList.remove('hidden');
-                updateAdminPanel();
-            }
-
-            updateChatList();
-            updateAnnouncements();
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            document.getElementById('dashboardContainer').classList.add('hidden');
-            document.getElementById('authContainer').classList.remove('hidden');
-            document.getElementById('signInForm').classList.remove('hidden');
-            document.getElementById('signUpForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById('signInForm').reset();
-        }
-
-        // Profile Picture Upload
-        document.getElementById('profilePicInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    currentUser.pic = event.target.result;
-                    const userIndex = allUsers.findIndex(u => u.id === currentUser.id);
-                    if (userIndex !== -1) {
-                        allUsers[userIndex].pic = event.target.result;
-                    }
-                    document.getElementById('profilePicImg').src = event.target.result;
-                    saveData();
-                    showSuccess('Profile picture updated!');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Chat Functions
-        function updateChatList() {
-            const list = document.getElementById('chatUsersList');
-            const users = allUsers.filter(u => u.id !== currentUser.id && u.status === 'active');
-            
-            if (users.length === 0) {
-                list.innerHTML = '<p style="color: #999; font-size: 12px;">No users available</p>';
-                return;
-            }
-
-            list.innerHTML = users.map(u => `
-                <div class="chat-user ${selectedChatUser?.id === u.id ? 'active' : ''}" onclick="selectChatUser(${u.id})">
-                    <strong>${u.name}</strong>
-                    <p style="font-size: 11px; margin: 2px 0;">${u.email}</p>
-                </div>
-            `).join('');
-        }
-
-        function selectChatUser(userId) {
-            selectedChatUser = allUsers.find(u => u.id === userId);
-            updateChatMessages();
-            document.getElementById('messageInput').disabled = false;
-            document.getElementById('sendBtn').disabled = false;
-            updateChatList();
-        }
-
-        function updateChatMessages() {
-            if (!selectedChatUser) return;
-            
-            const key = [currentUser.id, selectedChatUser.id].sort().join('_');
-            const messages = chatMessages[key] || [];
-            
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = messages.map(msg => `
-                <div class="message ${msg.senderId === currentUser.id ? 'own' : 'other'}">
-                    ${msg.text}
-                </div>
-            `).join('');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function sendMessage() {
-            if (!selectedChatUser) return;
-            
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            const key = [currentUser.id, selectedChatUser.id].sort().join('_');
-            if (!chatMessages[key]) chatMessages[key] = [];
-            
-            chatMessages[key].push({
-                senderId: currentUser.id,
-                text: text,
-                timestamp: new Date().toISOString()
-            });
-
-            input.value = '';
-            saveData();
-            updateChatMessages();
-        }
-
-        function updateAnnouncements() {
-            const container = document.getElementById('announcementsList');
-            const announcements = duties.filter(d => d.type === 'Announcement');
-            
-            if (announcements.length === 0) {
-                container.innerHTML = '<p style="color: #999;">No announcements yet</p>';
-                return;
-            }
-
-            container.innerHTML = announcements.map(a => `
-                <div class="user-item">
-                    <h4>${a.name}</h4>
-                    <p>${a.date}</p>
-                </div>
-            `).join('');
-        }
-
-        // Admin Functions
-        function updateAdminPanel() {
-            updatePendingTable();
-            updateUserTable();
-        }
-
-        function updatePendingTable() {
-            const tbody = document.getElementById('pendingTable');
-            if (pendingUsers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #999;">No pending requests</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = pendingUsers.map(u => `
-                <tr>
-                    <td>${u.name}</td>
-                    <td>${u.email}</td>
-                    <td>
-                        <button class="small" onclick="approveUser(${u.id})">✓ Approve</button>
-                        <button class="small" onclick="rejectUser(${u.id})" style="background: #ff6b6b;">✗ Reject</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function updateUserTable() {
-            const tbody = document.getElementById('userTableBody');
-            if (allUsers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No users</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = allUsers.map(u => `
-                <tr>
-                    <td>${u.name}</td>
-                    <td>${u.email}</td>
-                    <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role.toUpperCase()}</span></td>
-                    <td>
-                        ${u.role !== 'admin' ? `<button class="small" onclick="makeAdmin(${u.id})">Make Admin</button>` : 'Admin'}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function approveUser(userId) {
-            const user = pendingUsers.find(u => u.id === userId);
-            if (user) {
-                user.status = 'active';
-                allUsers.push(user);
-                pendingUsers = pendingUsers.filter(u => u.id !== userId);
-                saveData();
-                updateAdminPanel();
-                showSuccess(`${user.name} approved!`);
-                updateChatList();
-            }
-        }
-
-        function rejectUser(userId) {
-            pendingUsers = pendingUsers.filter(u => u.id !== userId);
-            saveData();
-            updateAdminPanel();
-            showSuccess('User request rejected');
-        }
-
-        function makeAdmin(userId) {
-            const user = allUsers.find(u => u.id === userId);
-            if (user) {
-                user.role = 'admin';
-                saveData();
-                updateUserTable();
-                showSuccess(`${user.name} is now an admin!`);
-            }
-        }
-
-        // Create Duty
-        document.getElementById('createDutyForm')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const duty = {
-                id: Date.now(),
-                name: document.getElementById('dutyName').value,
-                date: document.getElementById('dutyDate').value,
-                timeStart: document.getElementById('dutyTimeStart').value,
-                timeEnd: document.getElementById('dutyTimeEnd').value,
-                type: document.getElementById('dutyType').value,
-                status: 'open'
+                hours: 0,
+                profilePic: null
             };
-            duties.push(duty);
-            saveData();
-            showSuccess('Duty created!');
-            document.getElementById('createDutyForm').reset();
-        });
+
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            errorDiv.textContent = '';
+            errorDiv.innerHTML = '<div class="success">✓ Account created! Waiting for admin approval.</div>';
+            
+            setTimeout(() => {
+                toggleForms();
+            }, 2000);
+        }
+
+        function resetPassword() {
+            const email = document.getElementById('resetEmail').value;
+            const errorDiv = document.getElementById('resetError');
+
+            if (!email) {
+                errorDiv.textContent = 'Please enter your email';
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === email);
+
+            if (!user) {
+                errorDiv.textContent = 'Email not found';
+                return;
+            }
+
+            errorDiv.innerHTML = '<div class="success">✓ Password reset link sent to ' + email + '</div>';
+            setTimeout(() => showSignIn(), 2000);
+        }
+
+        // Initialize on page load
+        initUsers();
     </script>
 </body>
 </html>
