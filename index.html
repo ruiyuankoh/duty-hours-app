@@ -140,6 +140,20 @@
             display: block;
         }
 
+        .success {
+            background-color: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -324,6 +338,11 @@
             color: #c2185b;
         }
 
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
         /* Profile Picture */
         .profile-pic-container {
             text-align: center;
@@ -357,22 +376,23 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            font-size: 12px;
         }
 
         .user-table th {
             background: #f5f5f5;
-            padding: 12px;
+            padding: 10px;
             text-align: left;
             font-weight: 600;
             color: #333;
-            font-size: 13px;
+            font-size: 12px;
             border-bottom: 2px solid #ddd;
         }
 
         .user-table td {
-            padding: 12px;
+            padding: 10px;
             border-bottom: 1px solid #eee;
-            font-size: 13px;
+            font-size: 12px;
             color: #666;
         }
 
@@ -382,9 +402,9 @@
 
         .role-badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 12px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
         }
 
@@ -398,26 +418,38 @@
             color: #00695c;
         }
 
+        .role-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
         .action-btn {
-            padding: 6px 12px;
-            font-size: 11px;
+            padding: 5px 10px;
+            font-size: 10px;
             width: auto;
-            margin-right: 5px;
+            margin-right: 3px;
         }
 
         /* Chat Styles */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .chat-list {
-            list-style: none;
+        .chat-search {
             margin-bottom: 15px;
         }
 
-        .chat-item {
+        .chat-search input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .user-list {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .user-item {
             background: #f8f9fa;
             padding: 12px;
             border-radius: 8px;
@@ -425,21 +457,36 @@
             cursor: pointer;
             transition: background 0.2s;
             border-left: 4px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .chat-item:hover {
+        .user-item:hover {
             background: #e8e9fa;
         }
 
-        .chat-item h4 {
-            color: #333;
-            font-size: 14px;
-            margin-bottom: 3px;
+        .user-item-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            object-fit: cover;
         }
 
-        .chat-item p {
+        .user-item-info h4 {
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .user-item-info p {
             color: #999;
-            font-size: 12px;
+            font-size: 11px;
+        }
+
+        .chat-window {
+            display: none;
         }
 
         .chat-messages {
@@ -505,12 +552,12 @@
             }
 
             .user-table {
-                font-size: 12px;
+                font-size: 11px;
             }
 
             .user-table th,
             .user-table td {
-                padding: 8px;
+                padding: 6px;
             }
         }
     </style>
@@ -525,6 +572,7 @@
             </div>
 
             <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
 
             <!-- Sign In Form -->
             <form id="signInForm">
@@ -555,7 +603,8 @@
                     <label for="signUpPassword">Password</label>
                     <input type="password" id="signUpPassword" placeholder="••••••••" required>
                 </div>
-                <button type="submit">Create Account</button>
+                <button type="submit">Request Account</button>
+                <p style="margin-top: 10px; font-size: 12px; color: #999; text-align: center;">Your account will be reviewed by an admin</p>
             </form>
 
             <div class="toggle-link">
@@ -655,6 +704,7 @@
                         <p style="margin-bottom: 15px;"><strong>Name:</strong> <span id="profileName">Demo User</span></p>
                         <p style="margin-bottom: 15px;"><strong>Email:</strong> <span id="profileEmail">user@example.com</span></p>
                         <p style="margin-bottom: 15px;"><strong>Role:</strong> <span class="role-badge role-user" id="profileRole">User</span></p>
+                        <p style="margin-bottom: 15px;"><strong>Status:</strong> <span id="profileStatus">Active</span></p>
                         <p style="margin-bottom: 15px;"><strong>Total Hours:</strong> 24 hours</p>
                         <p style="margin-bottom: 15px;"><strong>Completed Duties:</strong> 4</p>
                         <p style="margin-bottom: 15px;"><strong>Member Since:</strong> January 1, 2026</p>
@@ -683,44 +733,61 @@
             <!-- Chat Tab -->
             <div id="chatTab" class="tab-pane">
                 <div class="section">
-                    <h3>💬 Group Chats</h3>
-                    <ul class="chat-list">
-                        <li class="chat-item" onclick="openChat('general')">
-                            <h4>📢 General Discussion</h4>
-                            <p>General chat for all members</p>
-                        </li>
-                        <li class="chat-item" onclick="openChat('announcements')">
-                            <h4>📣 Announcements</h4>
-                            <p>Important updates from admins</p>
-                        </li>
-                        <li class="chat-item" onclick="openChat('pending')">
-                            <h4>⏳ Pending Approval</h4>
-                            <p>Awaiting admin approval (2 requests)</p>
-                        </li>
-                    </ul>
+                    <h3>💬 Messages</h3>
+                    
+                    <div id="chatList">
+                        <div class="chat-search">
+                            <input type="text" id="chatSearch" placeholder="Search users..." onkeyup="searchUsers()">
+                        </div>
+
+                        <ul class="user-list" id="userList">
+                            <!-- Users will be populated here -->
+                        </ul>
+                    </div>
+
+                    <div class="chat-window" id="chatWindow">
+                        <button onclick="closeChat()" style="width: auto; padding: 5px 10px; font-size: 12px; margin-bottom: 10px;">← Back</button>
+                        <h4 id="chatUserName" style="margin-bottom: 10px; color: #333;"></h4>
+                        <div class="chat-messages" id="chatMessages"></div>
+                        <div class="form-group">
+                            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeypress(event)">
+                        </div>
+                        <button onclick="sendMessage()">Send Message</button>
+                    </div>
                 </div>
 
-                <div class="section" id="chatWindow" style="display: none;">
-                    <h3 id="chatTitle">Chat</h3>
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="message other">
-                            <strong>Admin:</strong> Welcome to the group chat!
-                        </div>
-                        <div class="message own">
-                            Thanks! Happy to be here.
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeypress(event)">
-                    </div>
-                    <button onclick="sendMessage()">Send Message</button>
+                <div class="section">
+                    <h3>📣 Group Announcements</h3>
+                    <ul class="duty-list">
+                        <li class="duty-item">
+                            <h4>📢 Welcome to Duty Hours!</h4>
+                            <p>Welcome to the Duty Hours System. Check the announcements regularly for updates.</p>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
             <!-- Admin Tab -->
             <div id="adminTab" class="tab-pane">
                 <div class="section">
-                    <h3>👥 User Management</h3>
+                    <h3>⏳ Pending Approvals</h3>
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingTable">
+                            <!-- Pending users will be shown here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h3>👥 Approved Users</h3>
                     <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Total Users: <strong id="totalUsers">5</strong></p>
                     <table class="user-table">
                         <thead>
@@ -733,41 +800,7 @@
                             </tr>
                         </thead>
                         <tbody id="userTableBody">
-                            <tr>
-                                <td>Admin User</td>
-                                <td>admin@example.com</td>
-                                <td><span class="role-badge role-admin">Admin</span></td>
-                                <td>0</td>
-                                <td><button class="action-btn">Edit</button></td>
-                            </tr>
-                            <tr>
-                                <td>John Doe</td>
-                                <td>john@example.com</td>
-                                <td><span class="role-badge role-user">User</span></td>
-                                <td>8</td>
-                                <td><button class="action-btn">Make Admin</button></td>
-                            </tr>
-                            <tr>
-                                <td>Jane Smith</td>
-                                <td>jane@example.com</td>
-                                <td><span class="role-badge role-user">User</span></td>
-                                <td>12</td>
-                                <td><button class="action-btn">Make Admin</button></td>
-                            </tr>
-                            <tr>
-                                <td>Bob Johnson</td>
-                                <td>bob@example.com</td>
-                                <td><span class="role-badge role-user">User</span></td>
-                                <td>5</td>
-                                <td><button class="action-btn">Make Admin</button></td>
-                            </tr>
-                            <tr>
-                                <td>Alice Brown</td>
-                                <td>alice@example.com</td>
-                                <td><span class="role-badge role-user">User</span></td>
-                                <td>16</td>
-                                <td><button class="action-btn">Make Admin</button></td>
-                            </tr>
+                            <!-- Users will be populated here -->
                         </tbody>
                     </table>
                 </div>
@@ -820,28 +853,52 @@
     </div>
 
     <script>
-        // User data storage
+        // Data storage
         let currentUser = null;
         let allUsers = [
-            { id: 1, name: 'Admin User', email: 'admin@example.com', role: 'admin', hours: 0 },
-            { id: 2, name: 'John Doe', email: 'john@example.com', role: 'user', hours: 8 },
-            { id: 3, name: 'Jane Smith', email: 'jane@example.com', role: 'user', hours: 12 },
-            { id: 4, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', hours: 5 },
-            { id: 5, name: 'Alice Brown', email: 'alice@example.com', role: 'user', hours: 16 }
+            { id: 1, name: 'Admin User', email: 'admin@example.com', role: 'admin', hours: 0, status: 'active', pic: null },
+            { id: 2, name: 'John Doe', email: 'john@example.com', role: 'user', hours: 8, status: 'active', pic: null },
+            { id: 3, name: 'Jane Smith', email: 'jane@example.com', role: 'user', hours: 12, status: 'active', pic: null },
+            { id: 4, name: 'Bob Johnson', email: 'bob@example.com', role: 'user', hours: 5, status: 'active', pic: null },
+            { id: 5, name: 'Alice Brown', email: 'alice@example.com', role: 'user', hours: 16, status: 'active', pic: null }
         ];
 
-        // Load user from localStorage on page load
-        function loadUserFromStorage() {
+        let pendingUsers = [];
+        let selectedChatUser = null;
+        let chatMessages = {};
+
+        // Load data from localStorage
+        function loadData() {
             const saved = localStorage.getItem('currentUser');
             if (saved) {
                 currentUser = JSON.parse(saved);
                 showDashboard();
             }
+
+            const savedUsers = localStorage.getItem('allUsers');
+            if (savedUsers) {
+                allUsers = JSON.parse(savedUsers);
+            }
+
+            const savedPending = localStorage.getItem('pendingUsers');
+            if (savedPending) {
+                pendingUsers = JSON.parse(savedPending);
+            }
+
+            const savedMessages = localStorage.getItem('chatMessages');
+            if (savedMessages) {
+                chatMessages = JSON.parse(savedMessages);
+            }
         }
 
-        // Save user to localStorage
-        function saveUserToStorage() {
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        // Save data to localStorage
+        function saveData() {
+            if (currentUser) {
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            localStorage.setItem('allUsers', JSON.stringify(allUsers));
+            localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+            localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
         }
 
         function toggleForms() {
@@ -860,8 +917,8 @@
         }
 
         function showDemo() {
-            currentUser = { name: 'Demo User', email: 'user@example.com', role: 'user' };
-            saveUserToStorage();
+            currentUser = { name: 'Demo User', email: 'user@example.com', role: 'user', status: 'active', pic: null };
+            saveData();
             showDashboard();
         }
 
@@ -872,6 +929,7 @@
             // Update profile info
             document.getElementById('profileName').textContent = currentUser.name;
             document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profileStatus').textContent = currentUser.status === 'active' ? '✅ Active' : '⏳ Pending Approval';
             
             const roleSpan = document.getElementById('profileRole');
             if (currentUser.role === 'admin') {
@@ -882,14 +940,22 @@
                 roleSpan.className = 'role-badge role-user';
             }
 
+            // Load profile picture
+            if (currentUser.pic) {
+                document.getElementById('profilePicImg').src = currentUser.pic;
+            }
+
             // Show admin tab only for admins
             const adminTab = document.querySelector('.admin-tab');
             if (currentUser.role === 'admin') {
                 adminTab.classList.remove('hidden');
-                document.getElementById('totalUsers').textContent = allUsers.length;
+                updateAdminPanel();
             } else {
                 adminTab.classList.add('hidden');
             }
+
+            // Populate chat users
+            populateChatUsers();
         }
 
         function logout() {
@@ -901,20 +967,15 @@
         }
 
         function switchTab(tabName) {
-            // Hide all tabs
             document.querySelectorAll('.tab-pane').forEach(tab => {
                 tab.classList.remove('active');
             });
 
-            // Remove active class from all buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
 
-            // Show selected tab
             document.getElementById(tabName + 'Tab').classList.add('active');
-
-            // Add active class to clicked button
             event.target.classList.add('active');
         }
 
@@ -922,16 +983,17 @@
         document.getElementById('signInForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('signInEmail').value;
+            const password = document.getElementById('signInPassword').value;
             
-            // Check if user is admin
-            if (email === 'ruiyuan.koh@gmail.com') {
-                currentUser = { name: 'Admin User', email: email, role: 'admin' };
+            // Check if user exists in approved users
+            const user = allUsers.find(u => u.email === email);
+            if (user) {
+                currentUser = { ...user };
+                saveData();
+                showDashboard();
             } else {
-                currentUser = { name: 'User', email: email, role: 'user' };
+                showError('User not found or account not approved yet');
             }
-            
-            saveUserToStorage();
-            showDashboard();
         });
 
         // Handle sign up
@@ -939,22 +1001,31 @@
             e.preventDefault();
             const name = document.getElementById('signUpName').value;
             const email = document.getElementById('signUpEmail').value;
+            const password = document.getElementById('signUpPassword').value;
             
-            // New users are always regular users, not admins
-            currentUser = { name: name, email: email, role: 'user' };
-            
-            // Add to all users list
-            allUsers.push({
-                id: allUsers.length + 1,
+            // Check if email already exists
+            if (allUsers.find(u => u.email === email) || pendingUsers.find(u => u.email === email)) {
+                showError('Email already registered');
+                return;
+            }
+
+            // Add to pending users
+            pendingUsers.push({
+                id: Date.now(),
                 name: name,
                 email: email,
+                password: password,
                 role: 'user',
-                hours: 0
+                status: 'pending',
+                pic: null
             });
+
+            saveData();
+            showSuccess('Account request submitted! Please wait for admin approval.');
             
-            saveUserToStorage();
-            alert('Account created! You can now use the app.');
-            showDashboard();
+            // Reset form
+            document.getElementById('signUpForm').reset();
+            setTimeout(() => toggleForms(), 2000);
         });
 
         // Profile picture upload
@@ -964,36 +1035,97 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('profilePicImg').src = e.target.result;
-                    localStorage.setItem('profilePic', e.target.result);
+                    currentUser.pic = e.target.result;
+                    saveData();
                 };
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // Load profile picture from storage
-        function loadProfilePic() {
-            const saved = localStorage.getItem('profilePic');
-            if (saved) {
-                document.getElementById('profilePicImg').src = saved;
-            }
+        // Chat functions
+        function populateChatUsers() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+
+            allUsers.filter(u => u.email !== currentUser.email).forEach(user => {
+                const li = document.createElement('li');
+                li.className = 'user-item';
+                li.onclick = () => openChat(user);
+                li.innerHTML = `
+                    <img src="${user.pic || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ddd%22/%3E%3Ctext x=%2250%22 y=%2260%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23999%22%3E👤%3C/text%3E%3C/svg%3E'}" class="user-item-pic">
+                    <div class="user-item-info">
+                        <h4>${user.name}</h4>
+                        <p>${user.email}</p>
+                    </div>
+                `;
+                userList.appendChild(li);
+            });
         }
 
-        // Chat functions
-        function openChat(chatName) {
+        function searchUsers() {
+            const search = document.getElementById('chatSearch').value.toLowerCase();
+            const userList = document.getElementById('userList');
+            const items = userList.querySelectorAll('.user-item');
+
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(search) ? 'flex' : 'none';
+            });
+        }
+
+        function openChat(user) {
+            selectedChatUser = user;
+            document.getElementById('chatList').style.display = 'none';
             document.getElementById('chatWindow').style.display = 'block';
-            document.getElementById('chatTitle').textContent = chatName.charAt(0).toUpperCase() + chatName.slice(1);
+            document.getElementById('chatUserName').textContent = `💬 Chat with ${user.name}`;
+            
+            const key = `${currentUser.email}-${user.email}`;
+            if (!chatMessages[key]) {
+                chatMessages[key] = [];
+            }
+
+            displayMessages(key);
+        }
+
+        function closeChat() {
+            document.getElementById('chatList').style.display = 'block';
+            document.getElementById('chatWindow').style.display = 'none';
+            selectedChatUser = null;
+        }
+
+        function displayMessages(key) {
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML = '';
+
+            chatMessages[key].forEach(msg => {
+                const msgElement = document.createElement('div');
+                msgElement.className = `message ${msg.sender === currentUser.email ? 'own' : 'other'}`;
+                msgElement.textContent = msg.text;
+                messagesDiv.appendChild(msgElement);
+            });
+
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         function sendMessage() {
+            if (!selectedChatUser) return;
+
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
             if (message) {
-                const messagesDiv = document.getElementById('chatMessages');
-                const msgElement = document.createElement('div');
-                msgElement.className = 'message own';
-                msgElement.textContent = message;
-                messagesDiv.appendChild(msgElement);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                const key = `${currentUser.email}-${selectedChatUser.email}`;
+                if (!chatMessages[key]) {
+                    chatMessages[key] = [];
+                }
+
+                chatMessages[key].push({
+                    sender: currentUser.email,
+                    text: message,
+                    time: new Date().toLocaleTimeString()
+                });
+
+                saveData();
+                displayMessages(key);
                 input.value = '';
             }
         }
@@ -1004,17 +1136,111 @@
             }
         }
 
-        // Register service worker for PWA
+        // Admin functions
+        function updateAdminPanel() {
+            // Update pending approvals
+            const pendingTable = document.getElementById('pendingTable');
+            pendingTable.innerHTML = '';
+
+            pendingUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="status-badge status-pending">Pending</span></td>
+                    <td>
+                        <button class="action-btn" onclick="approveUser(${user.id})">✓ Approve</button>
+                        <button class="action-btn" style="background: #ff6b6b;" onclick="rejectUser(${user.id})">✗ Reject</button>
+                    </td>
+                `;
+                pendingTable.appendChild(row);
+            });
+
+            // Update approved users table
+            const userTableBody = document.getElementById('userTableBody');
+            userTableBody.innerHTML = '';
+
+            allUsers.forEach(user => {
+                const row = document.createElement('tr');
+                const roleClass = user.role === 'admin' ? 'role-admin' : 'role-user';
+                const roleText = user.role === 'admin' ? 'Admin' : 'User';
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="role-badge ${roleClass}">${roleText}</span></td>
+                    <td>${user.hours}</td>
+                    <td>
+                        <button class="action-btn" onclick="makeAdmin(${user.id})">Make Admin</button>
+                    </td>
+                `;
+                userTableBody.appendChild(row);
+            });
+
+            document.getElementById('totalUsers').textContent = allUsers.length;
+        }
+
+        function approveUser(userId) {
+            const user = pendingUsers.find(u => u.id === userId);
+            if (user) {
+                allUsers.push({
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: 'user',
+                    hours: 0,
+                    status: 'active',
+                    pic: null
+                });
+
+                pendingUsers = pendingUsers.filter(u => u.id !== userId);
+                saveData();
+                updateAdminPanel();
+                alert(`User ${user.name} approved!`);
+            }
+        }
+
+        function rejectUser(userId) {
+            pendingUsers = pendingUsers.filter(u => u.id !== userId);
+            saveData();
+            updateAdminPanel();
+            alert('User rejected');
+        }
+
+        function makeAdmin(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (user) {
+                user.role = 'admin';
+                saveData();
+                updateAdminPanel();
+                alert(`${user.name} is now an admin!`);
+            }
+        }
+
+        // Error and success messages
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => errorDiv.classList.remove('show'), 3000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.classList.add('show');
+            setTimeout(() => successDiv.classList.remove('show'), 3000);
+        }
+
+        // Register service worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(err => {
                 console.log('Service Worker registration failed:', err);
             });
         }
 
-        // Initialize on page load
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            loadUserFromStorage();
-            loadProfilePic();
+            loadData();
         });
     </script>
 </body>
