@@ -75,10 +75,27 @@
         .user-item h4 { color: #333; font-size: 13px; margin-bottom: 2px; }
         .user-item p { color: #999; font-size: 11px; }
         
-        .chat-messages { background: #f8f9fa; padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto; margin-bottom: 15px; }
+        .chat-container { display: flex; gap: 15px; height: 100%; }
+        .chat-list { flex: 0 0 200px; background: white; border-radius: 8px; overflow-y: auto; padding: 10px; }
+        .chat-window { flex: 1; background: white; border-radius: 8px; display: flex; flex-direction: column; }
+        
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; }
         .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
         .message.own { background: #667eea; color: white; text-align: right; }
         .message.other { background: white; color: #333; border: 1px solid #ddd; }
+        
+        .chat-input { padding: 15px; display: flex; gap: 10px; border-top: 1px solid #ddd; }
+        .chat-input input { flex: 1; }
+        .chat-input button { width: auto; }
+        
+        .chat-user { padding: 8px; cursor: pointer; border-radius: 6px; margin-bottom: 5px; }
+        .chat-user.active { background: #667eea; color: white; }
+        .chat-user:hover { background: #f0f0f0; }
+        
+        @media (max-width: 768px) {
+            .chat-container { flex-direction: column; }
+            .chat-list { flex: 0 0 auto; max-height: 100px; }
+        }
     </style>
 </head>
 <body>
@@ -105,6 +122,12 @@
                     <input type="password" id="signInPassword" placeholder="••••••••" required>
                 </div>
                 <button type="submit">Sign In</button>
+                <div class="toggle-link">
+                    Don't have an account? <a onclick="toggleForms()">Sign Up</a>
+                </div>
+                <div class="toggle-link">
+                    <a onclick="showForgotPassword()" style="font-size: 12px;">Forgot Password?</a>
+                </div>
             </form>
 
             <!-- Sign Up Form -->
@@ -122,32 +145,45 @@
                     <label>Password</label>
                     <input type="password" id="signUpPassword" placeholder="••••••••" required>
                 </div>
-                <button type="submit">Request Account</button>
-                <p style="margin-top: 10px; font-size: 12px; color: #999; text-align: center;">Your account will be reviewed by an admin</p>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="signUpConfirmPassword" placeholder="••••••••" required>
+                </div>
+                <p style="font-size: 12px; color: #999; margin-bottom: 15px;">Your account will be reviewed by an admin</p>
+                <button type="submit">Sign Up</button>
+                <div class="toggle-link">
+                    Already have an account? <a onclick="toggleForms()">Sign In</a>
+                </div>
             </form>
 
-            <div class="toggle-link">
-                <span id="toggleText">Don't have an account? <a onclick="toggleForms()">Sign Up</a></span>
-            </div>
-
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999; text-align: center;">
-                <p>Demo Admin: ruiyuan.koh@gmail.com / password</p>
-            </div>
+            <!-- Forgot Password Form -->
+            <form id="forgotPasswordForm" class="hidden">
+                <h3 style="margin-bottom: 20px; color: #333; text-align: center;">Reset Password</h3>
+                <p style="font-size: 12px; color: #999; margin-bottom: 15px;">Enter your email to receive password reset instructions</p>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="resetEmail" placeholder="your@email.com" required>
+                </div>
+                <button type="submit">Send Reset Link</button>
+                <div class="toggle-link">
+                    <a onclick="showSignIn()">Back to Sign In</a>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Dashboard Container -->
     <div id="dashboardContainer" class="dashboard-wrapper hidden">
         <div class="dashboard-header">
-            <h2>⏱️ Duty Hours</h2>
+            <h2>⏱️ Duty Hours System</h2>
             <button class="logout-btn" onclick="logout()">Sign Out</button>
         </div>
 
         <div class="tab-navigation">
-            <button class="tab-btn active" onclick="switchTab('home')">🏠 Home</button>
-            <button class="tab-btn" onclick="switchTab('profile')">👤 Profile</button>
-            <button class="tab-btn" onclick="switchTab('chat')">💬 Chat</button>
-            <button class="tab-btn admin-tab hidden" onclick="switchTab('admin')">⚙️ Admin</button>
+            <button class="tab-btn active" onclick="switchTab('homeTab')">🏠 Home</button>
+            <button class="tab-btn" onclick="switchTab('profileTab')">👤 Profile</button>
+            <button class="tab-btn" onclick="switchTab('chatTab')">💬 Chat</button>
+            <button class="tab-btn" id="adminTabBtn" onclick="switchTab('adminTab')" class="hidden">⚙️ Admin</button>
         </div>
 
         <div class="tab-content">
@@ -155,11 +191,16 @@
             <div id="homeTab" class="tab-pane active">
                 <div class="section">
                     <h3>📋 Available Duties</h3>
-                    <p style="color: #999;">No duties available yet</p>
+                    <div id="dutiesList">
+                        <p style="color: #999;">No duties available yet</p>
+                    </div>
                 </div>
+
                 <div class="section">
                     <h3>✅ My Signups</h3>
-                    <p style="color: #999;">You haven't signed up for any duties yet</p>
+                    <div id="mySignupsList">
+                        <p style="color: #999;">You haven't signed up for any duties yet</p>
+                    </div>
                 </div>
             </div>
 
@@ -168,15 +209,16 @@
                 <div class="section">
                     <h3>👤 My Profile</h3>
                     <div class="profile-pic-container">
-                        <img id="profilePicImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='40' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E" class="profile-pic" alt="Profile">
-                        <input type="file" id="profilePicInput" accept="image/*" onchange="uploadProfilePic()">
-                        <button class="small" onclick="document.getElementById('profilePicInput').click()">📷 Upload Picture</button>
+                        <img id="profilePicImg" class="profile-pic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='35' r='15' fill='%23999'/%3E%3Cpath d='M 30 60 Q 50 50 70 60' fill='%23999'/%3E%3C/svg%3E" alt="Profile">
+                        <input type="file" id="profilePicInput" accept="image/*">
+                        <button onclick="document.getElementById('profilePicInput').click()" style="width: 150px; margin-top: 10px;">📷 Upload Picture</button>
                     </div>
-                    <div style="padding: 20px 0;">
-                        <p style="margin-bottom: 15px;"><strong>Name:</strong> <span id="profileName">-</span></p>
-                        <p style="margin-bottom: 15px;"><strong>Email:</strong> <span id="profileEmail">-</span></p>
-                        <p style="margin-bottom: 15px;"><strong>Role:</strong> <span id="profileRole" class="badge badge-user">User</span></p>
-                        <p style="margin-bottom: 15px;"><strong>Status:</strong> <span id="profileStatus">-</span></p>
+                    <div style="margin-top: 20px;">
+                        <p><strong>Name:</strong> <span id="profileName">-</span></p>
+                        <p><strong>Email:</strong> <span id="profileEmail">-</span></p>
+                        <p><strong>Role:</strong> <span id="profileRole" class="badge badge-user">User</span></p>
+                        <p><strong>Status:</strong> <span id="profileStatus">-</span></p>
+                        <p><strong>Total Hours:</strong> <span id="profileHours">0</span></p>
                     </div>
                 </div>
             </div>
@@ -185,21 +227,29 @@
             <div id="chatTab" class="tab-pane">
                 <div class="section">
                     <h3>💬 Messages</h3>
-                    <div id="chatList">
-                        <input type="text" id="chatSearch" placeholder="Search users..." onkeyup="searchUsers()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px;">
-                        <div id="userList" style="max-height: 400px; overflow-y: auto;">
-                            <!-- Users will be listed here -->
+                    <div class="chat-container">
+                        <div class="chat-list">
+                            <input type="text" id="chatSearch" placeholder="Search users..." style="width: 100%; margin-bottom: 10px;">
+                            <div id="chatUsersList">
+                                <p style="color: #999; font-size: 12px;">No users available</p>
+                            </div>
+                        </div>
+                        <div class="chat-window">
+                            <div class="chat-messages" id="chatMessages">
+                                <p style="color: #999; text-align: center;">Select a user to start chatting</p>
+                            </div>
+                            <div class="chat-input">
+                                <input type="text" id="messageInput" placeholder="Type a message..." disabled>
+                                <button onclick="sendMessage()" disabled id="sendBtn">Send</button>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="section hidden" id="chatWindow">
-                        <button class="small" onclick="closeChat()">← Back</button>
-                        <h4 id="chatUserName" style="margin: 10px 0; color: #333;"></h4>
-                        <div class="chat-messages" id="chatMessages"></div>
-                        <div class="form-group">
-                            <input type="text" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendMessage()">
-                        </div>
-                        <button onclick="sendMessage()">Send Message</button>
+                <div class="section">
+                    <h3>📣 Announcements</h3>
+                    <div id="announcementsList">
+                        <p style="color: #999;">No announcements yet</p>
                     </div>
                 </div>
             </div>
@@ -238,29 +288,73 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div class="section">
+                    <h3>➕ Create New Duty</h3>
+                    <form id="createDutyForm">
+                        <div class="form-group">
+                            <label>Duty Name</label>
+                            <input type="text" id="dutyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="dutyDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Time Start</label>
+                            <input type="time" id="dutyTimeStart" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Time End</label>
+                            <input type="time" id="dutyTimeEnd" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="dutyType" required>
+                                <option value="">Select type</option>
+                                <option value="Cleaning">Cleaning</option>
+                                <option value="Event">Event</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <button type="submit">Create Duty</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         let currentUser = null;
-        let allUsers = [
-            { id: 1, name: 'Admin User', email: 'ruiyuan.koh@gmail.com', password: 'password', role: 'admin', status: 'active', pic: null }
-        ];
+        let allUsers = [];
         let pendingUsers = [];
-        let selectedChatUser = null;
+        let duties = [];
+        let dutySignups = [];
         let chatMessages = {};
+        let selectedChatUser = null;
+
+        // Load data on page load
+        window.addEventListener('load', function() {
+            loadData();
+            if (currentUser) {
+                showDashboard();
+            }
+        });
 
         function loadData() {
             const saved = localStorage.getItem('currentUser');
             if (saved) {
                 currentUser = JSON.parse(saved);
-                showDashboard();
             }
             const savedUsers = localStorage.getItem('allUsers');
             if (savedUsers) allUsers = JSON.parse(savedUsers);
             const savedPending = localStorage.getItem('pendingUsers');
             if (savedPending) pendingUsers = JSON.parse(savedPending);
+            const savedDuties = localStorage.getItem('duties');
+            if (savedDuties) duties = JSON.parse(savedDuties);
+            const savedSignups = localStorage.getItem('dutySignups');
+            if (savedSignups) dutySignups = JSON.parse(savedSignups);
             const savedMessages = localStorage.getItem('chatMessages');
             if (savedMessages) chatMessages = JSON.parse(savedMessages);
         }
@@ -268,6 +362,8 @@
         function saveData() {
             localStorage.setItem('allUsers', JSON.stringify(allUsers));
             localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
+            localStorage.setItem('duties', JSON.stringify(duties));
+            localStorage.setItem('dutySignups', JSON.stringify(dutySignups));
             localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
             if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
         }
@@ -275,9 +371,16 @@
         function toggleForms() {
             document.getElementById('signInForm').classList.toggle('hidden');
             document.getElementById('signUpForm').classList.toggle('hidden');
-            document.getElementById('toggleText').innerHTML = document.getElementById('signUpForm').classList.contains('hidden') 
-                ? "Don't have an account? <a onclick=\"toggleForms()\">Sign Up</a>"
-                : "Already have an account? <a onclick=\"toggleForms()\">Sign In</a>";
+        }
+
+        function showForgotPassword() {
+            document.getElementById('signInForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.remove('hidden');
+        }
+
+        function showSignIn() {
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('signInForm').classList.remove('hidden');
         }
 
         function showError(msg) {
@@ -294,6 +397,7 @@
             setTimeout(() => div.classList.remove('show'), 3000);
         }
 
+        // Sign In
         document.getElementById('signInForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('signInEmail').value;
@@ -309,12 +413,19 @@
             }
         });
 
+        // Sign Up
         document.getElementById('signUpForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('signUpName').value;
             const email = document.getElementById('signUpEmail').value;
             const password = document.getElementById('signUpPassword').value;
+            const confirmPassword = document.getElementById('signUpConfirmPassword').value;
             
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
             if (allUsers.find(u => u.email === email) || pendingUsers.find(u => u.email === email)) {
                 showError('Email already registered');
                 return;
@@ -336,12 +447,27 @@
             setTimeout(() => toggleForms(), 2000);
         });
 
+        // Forgot Password
+        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('resetEmail').value;
+            const user = allUsers.find(u => u.email === email);
+            if (user) {
+                showSuccess('Password reset link sent to your email');
+                setTimeout(() => showSignIn(), 2000);
+            } else {
+                showError('Email not found');
+            }
+        });
+
         function showDashboard() {
             document.getElementById('authContainer').classList.add('hidden');
             document.getElementById('dashboardContainer').classList.remove('hidden');
             
             document.getElementById('profileName').textContent = currentUser.name;
             document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profileRole').textContent = currentUser.role.toUpperCase();
+            document.getElementById('profileRole').className = 'badge ' + (currentUser.role === 'admin' ? 'badge-admin' : 'badge-user');
             document.getElementById('profileStatus').textContent = currentUser.status === 'active' ? '✅ Active' : '⏳ Pending';
             
             if (currentUser.pic) {
@@ -349,13 +475,19 @@
             }
 
             if (currentUser.role === 'admin') {
-                document.querySelector('.admin-tab').classList.remove('hidden');
+                document.getElementById('adminTabBtn').classList.remove('hidden');
                 updateAdminPanel();
-            } else {
-                document.querySelector('.admin-tab').classList.add('hidden');
             }
 
-            populateChatUsers();
+            updateChatList();
+            updateAnnouncements();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
         }
 
         function logout() {
@@ -363,130 +495,164 @@
             localStorage.removeItem('currentUser');
             document.getElementById('dashboardContainer').classList.add('hidden');
             document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('signInForm').classList.remove('hidden');
+            document.getElementById('signUpForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('signInForm').reset();
         }
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function uploadProfilePic() {
-            const input = document.getElementById('profilePicInput');
-            if (input.files && input.files[0]) {
+        // Profile Picture Upload
+        document.getElementById('profilePicInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('profilePicImg').src = e.target.result;
-                    currentUser.pic = e.target.result;
+                reader.onload = function(event) {
+                    currentUser.pic = event.target.result;
+                    const userIndex = allUsers.findIndex(u => u.id === currentUser.id);
+                    if (userIndex !== -1) {
+                        allUsers[userIndex].pic = event.target.result;
+                    }
+                    document.getElementById('profilePicImg').src = event.target.result;
                     saveData();
                     showSuccess('Profile picture updated!');
                 };
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             }
+        });
+
+        // Chat Functions
+        function updateChatList() {
+            const list = document.getElementById('chatUsersList');
+            const users = allUsers.filter(u => u.id !== currentUser.id && u.status === 'active');
+            
+            if (users.length === 0) {
+                list.innerHTML = '<p style="color: #999; font-size: 12px;">No users available</p>';
+                return;
+            }
+
+            list.innerHTML = users.map(u => `
+                <div class="chat-user ${selectedChatUser?.id === u.id ? 'active' : ''}" onclick="selectChatUser(${u.id})">
+                    <strong>${u.name}</strong>
+                    <p style="font-size: 11px; margin: 2px 0;">${u.email}</p>
+                </div>
+            `).join('');
         }
 
-        function populateChatUsers() {
-            const userList = document.getElementById('userList');
-            userList.innerHTML = '';
-            allUsers.filter(u => u.email !== currentUser.email && u.status === 'active').forEach(user => {
-                const div = document.createElement('div');
-                div.className = 'user-item';
-                div.onclick = () => openChat(user);
-                div.innerHTML = `<h4>${user.name}</h4><p>${user.email}</p>`;
-                userList.appendChild(div);
-            });
+        function selectChatUser(userId) {
+            selectedChatUser = allUsers.find(u => u.id === userId);
+            updateChatMessages();
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            updateChatList();
         }
 
-        function searchUsers() {
-            const search = document.getElementById('chatSearch').value.toLowerCase();
-            document.querySelectorAll('#userList .user-item').forEach(item => {
-                item.style.display = item.textContent.toLowerCase().includes(search) ? 'block' : 'none';
-            });
-        }
-
-        function openChat(user) {
-            selectedChatUser = user;
-            document.getElementById('chatList').classList.add('hidden');
-            document.getElementById('chatWindow').classList.remove('hidden');
-            document.getElementById('chatUserName').textContent = `💬 ${user.name}`;
-            const key = `${currentUser.email}-${user.email}`;
-            if (!chatMessages[key]) chatMessages[key] = [];
-            displayMessages(key);
-        }
-
-        function closeChat() {
-            document.getElementById('chatList').classList.remove('hidden');
-            document.getElementById('chatWindow').classList.add('hidden');
-            selectedChatUser = null;
-        }
-
-        function displayMessages(key) {
-            const div = document.getElementById('chatMessages');
-            div.innerHTML = '';
-            chatMessages[key].forEach(msg => {
-                const msgDiv = document.createElement('div');
-                msgDiv.className = `message ${msg.sender === currentUser.email ? 'own' : 'other'}`;
-                msgDiv.textContent = msg.text;
-                div.appendChild(msgDiv);
-            });
-            div.scrollTop = div.scrollHeight;
+        function updateChatMessages() {
+            if (!selectedChatUser) return;
+            
+            const key = [currentUser.id, selectedChatUser.id].sort().join('_');
+            const messages = chatMessages[key] || [];
+            
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = messages.map(msg => `
+                <div class="message ${msg.senderId === currentUser.id ? 'own' : 'other'}">
+                    ${msg.text}
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
         }
 
         function sendMessage() {
             if (!selectedChatUser) return;
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if (msg) {
-                const key = `${currentUser.email}-${selectedChatUser.email}`;
-                if (!chatMessages[key]) chatMessages[key] = [];
-                chatMessages[key].push({ sender: currentUser.email, text: msg });
-                saveData();
-                displayMessages(key);
-                input.value = '';
-            }
+            
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const key = [currentUser.id, selectedChatUser.id].sort().join('_');
+            if (!chatMessages[key]) chatMessages[key] = [];
+            
+            chatMessages[key].push({
+                senderId: currentUser.id,
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+
+            input.value = '';
+            saveData();
+            updateChatMessages();
         }
 
-        function updateAdminPanel() {
-            const pendingTable = document.getElementById('pendingTable');
-            pendingTable.innerHTML = '';
-            pendingUsers.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td>
-                        <button class="small" onclick="approveUser(${user.id})">✓ Approve</button>
-                        <button class="small" style="background: #ff6b6b;" onclick="rejectUser(${user.id})">✗ Reject</button>
-                    </td>
-                `;
-                pendingTable.appendChild(row);
-            });
+        function updateAnnouncements() {
+            const container = document.getElementById('announcementsList');
+            const announcements = duties.filter(d => d.type === 'Announcement');
+            
+            if (announcements.length === 0) {
+                container.innerHTML = '<p style="color: #999;">No announcements yet</p>';
+                return;
+            }
 
-            const userTableBody = document.getElementById('userTableBody');
-            userTableBody.innerHTML = '';
-            allUsers.forEach(user => {
-                const row = document.createElement('tr');
-                const roleClass = user.role === 'admin' ? 'badge-admin' : 'badge-user';
-                const roleText = user.role === 'admin' ? 'Admin' : 'User';
-                row.innerHTML = `
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td><span class="badge ${roleClass}">${roleText}</span></td>
-                    <td><button class="small" onclick="makeAdmin(${user.id})">Make Admin</button></td>
-                `;
-                userTableBody.appendChild(row);
-            });
+            container.innerHTML = announcements.map(a => `
+                <div class="user-item">
+                    <h4>${a.name}</h4>
+                    <p>${a.date}</p>
+                </div>
+            `).join('');
+        }
+
+        // Admin Functions
+        function updateAdminPanel() {
+            updatePendingTable();
+            updateUserTable();
+        }
+
+        function updatePendingTable() {
+            const tbody = document.getElementById('pendingTable');
+            if (pendingUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #999;">No pending requests</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = pendingUsers.map(u => `
+                <tr>
+                    <td>${u.name}</td>
+                    <td>${u.email}</td>
+                    <td>
+                        <button class="small" onclick="approveUser(${u.id})">✓ Approve</button>
+                        <button class="small" onclick="rejectUser(${u.id})" style="background: #ff6b6b;">✗ Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateUserTable() {
+            const tbody = document.getElementById('userTableBody');
+            if (allUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No users</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = allUsers.map(u => `
+                <tr>
+                    <td>${u.name}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role.toUpperCase()}</span></td>
+                    <td>
+                        ${u.role !== 'admin' ? `<button class="small" onclick="makeAdmin(${u.id})">Make Admin</button>` : 'Admin'}
+                    </td>
+                </tr>
+            `).join('');
         }
 
         function approveUser(userId) {
             const user = pendingUsers.find(u => u.id === userId);
             if (user) {
-                allUsers.push({ ...user, status: 'active' });
+                user.status = 'active';
+                allUsers.push(user);
                 pendingUsers = pendingUsers.filter(u => u.id !== userId);
                 saveData();
                 updateAdminPanel();
                 showSuccess(`${user.name} approved!`);
+                updateChatList();
             }
         }
 
@@ -494,7 +660,7 @@
             pendingUsers = pendingUsers.filter(u => u.id !== userId);
             saveData();
             updateAdminPanel();
-            showSuccess('User rejected');
+            showSuccess('User request rejected');
         }
 
         function makeAdmin(userId) {
@@ -502,16 +668,28 @@
             if (user) {
                 user.role = 'admin';
                 saveData();
-                updateAdminPanel();
+                updateUserTable();
                 showSuccess(`${user.name} is now an admin!`);
             }
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
-        }
-
-        document.addEventListener('DOMContentLoaded', loadData);
+        // Create Duty
+        document.getElementById('createDutyForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const duty = {
+                id: Date.now(),
+                name: document.getElementById('dutyName').value,
+                date: document.getElementById('dutyDate').value,
+                timeStart: document.getElementById('dutyTimeStart').value,
+                timeEnd: document.getElementById('dutyTimeEnd').value,
+                type: document.getElementById('dutyType').value,
+                status: 'open'
+            };
+            duties.push(duty);
+            saveData();
+            showSuccess('Duty created!');
+            document.getElementById('createDutyForm').reset();
+        });
     </script>
 </body>
 </html>
